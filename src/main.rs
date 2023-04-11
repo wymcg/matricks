@@ -86,18 +86,16 @@ fn main() {
 
     }
 
+    log_main(&log_tx, LogType::Normal, format!("Quitting Matricks."));
 
     // close channels
-    log_main(&log_tx, LogType::Normal, format!("Closing thread channels..."));
     drop(log_tx);
 
     // join logging and matrix control threads
-    log_main(&log_tx, LogType::Normal, format!("Joining threads..."));
     log_thread_handle
         .join()
         .expect("Unable to join log thread!");
 
-    log_main(&log_tx, LogType::Normal, format!("Quitting Matricks."));
 }
 
 /// Send a log from the main thread
