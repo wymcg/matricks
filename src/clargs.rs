@@ -17,7 +17,7 @@ pub struct Args {
 
     /// Target framerate at which to drive the matrix
     #[arg(short, long, default_value = "30")]
-    pub fps: u32,
+    pub fps: f32,
 
     /// Directory to write logs
     #[arg(short, long, default_value = "log")]

@@ -39,8 +39,8 @@ fn main() {
         format!("Starting Matricks v{}", VERSION.unwrap_or("unknown")));
 
     // calculate the frame time from the fps option
-    let target_frame_time_ms = Duration::from_millis(
-        (1000.0 / (args.fps as f32)).round() as u64
+    let target_frame_time_ms = Duration::from_nanos(
+        (1_000_000_000.0 / args.fps).round() as u64
     );
 
     // make the matrix configuration string

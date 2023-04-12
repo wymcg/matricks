@@ -5,5 +5,5 @@ use serde::Serialize;
 pub struct MatrixConfiguration {
     pub width: usize,
     pub height: usize,
-    pub target_fps: u32,
+    pub target_fps: f32,
 }
