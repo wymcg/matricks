@@ -1216,6 +1216,8 @@ dependencies = [
  "extism",
  "glob",
  "regex",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

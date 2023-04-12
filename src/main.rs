@@ -1,22 +1,31 @@
 mod clargs;
 mod logging;
 mod plugin_iterator;
+mod matrix_configuration;
+mod plugin_update;
 
+use std::str::from_utf8;
 use std::sync::mpsc::Sender;
+use std::time::{Duration, Instant};
 use clargs::Args;
 use plugin_iterator::PluginIterator;
 
 use crate::logging::log_thread::LoggingThread;
 use clap::Parser;
 use extism::{Context, Plugin};
+use serde_json::from_str;
 use crate::logging::log::Log;
 use crate::logging::log_origin::LogOrigin;
 use crate::logging::log_type::LogType;
+use crate::matrix_configuration::MatrixConfiguration;
+use crate::plugin_update::PluginUpdate;
 use crate::plugin_iterator::PluginIteratorError;
 
 const VERSION: Option<&str> = option_env!("CARGO_PKG_VERSION");
 
 fn main() {
+    ////// SETUP
+
     // parse command line arguments
     let args = Args::parse();
 
@@ -29,6 +38,29 @@ fn main() {
         LogType::Normal,
         format!("Starting Matricks v{}", VERSION.unwrap_or("unknown")));
 
+    // calculate the frame time from the fps option
+    let target_frame_time_ms = Duration::from_millis(
+        (1000.0 / (args.fps as f32)).round() as u64
+    );
+
+    // make the matrix configuration string
+    let mat_config = MatrixConfiguration {
+        width: args.width,
+        height: args.height,
+        target_fps: args.fps,
+    };
+    let mat_config_string = match serde_json::to_string(&mat_config) {
+        Ok(s) => {s}
+        Err(_) => {
+            log_main(&log_tx,
+                     LogType::Error,
+                     "Unable to generate matrix configuration information!".to_string());
+            log_main(&log_tx, LogType::Normal, "Quitting Matricks.".to_string());
+            return;
+        }
+    };
+
+
     // make the plugin iterator
     let plugin_data_list = match PluginIterator::new(args.plugins)
     {
@@ -40,6 +72,7 @@ fn main() {
         }
     };
 
+    ////// PLUGIN LOOP
     for plugin_result in plugin_data_list {
         // check if the plugin data was successfully read
         let (plugin_path, plugin_data) = match plugin_result {
@@ -82,7 +115,90 @@ fn main() {
             }
         };
 
-        // call setup and update here
+        // call setup function of current active plugin
+        let _setup_result = match plugin.call("setup", &mat_config_string) {
+            Ok(result) => {
+                log_main(
+                    &log_tx,
+                    LogType::Normal,
+                    "Plugin setup complete. Starting update loop...".to_string());
+                result
+            }
+            Err(_) => {
+                log_main(
+                    &log_tx,
+                    LogType::Warning,
+                    "Unable to complete setup! Starting update loop anyway...".to_string());
+                &[]
+            }
+        };
+
+        // setup the last frame time variable
+        let mut last_frame_time = Instant::now();
+        'update_loop: loop {
+            // only call the update function if a frame has passes
+            if (Instant::now() - last_frame_time) >= target_frame_time_ms {
+                // reset the last frame time
+                last_frame_time = Instant::now();
+
+                // call the update function
+                let next_matrix_state = match plugin.call("update", "") {
+                    Ok(json_result_utf8) => {
+                        // convert the result form utf8 to &str
+                        let json_result_str = match from_utf8(json_result_utf8) {
+                            Ok(s) => {s}
+                            Err(_) => {
+                                log_main(
+                                    &log_tx,
+                                    LogType::Warning,
+                                    "Invalid UTF-8 result from plugin! Skipping this plugin...".to_string()
+                                );
+                                break 'update_loop;
+                            }
+                        };
+
+                        // make a matrix state object from the string
+                        let new_update = match from_str::<PluginUpdate>(json_result_str) {
+                            Ok(matrix_state) => {matrix_state}
+                            Err(_) => {
+                                log_main(
+                                    &log_tx,
+                                    LogType::Warning,
+                                    "Unable to deserialize result from plugin! Skipping this plugin...".to_string()
+                                );
+                                break 'update_loop;
+                            }
+                        };
+
+                        match new_update.log_message {
+                            None => {}
+                            Some(msg) => {println!("{msg}")}
+                        }
+
+                        // todo send matrix state to the matrix control thread
+
+                        // go to the next plugin if the plugin says it is done
+                        if new_update.done {
+                            log_main(
+                                &log_tx,
+                                LogType::Normal,
+                                "Plugin signalled that it is done. Moving on to the next plugin...".to_string()
+                            );
+                            break 'update_loop;
+                        }
+
+                    }
+                    Err(_) => {
+                        log_main(
+                            &log_tx,
+                            LogType::Warning,
+                            "Unable to call update function! Skipping this plugin...".to_string()
+                        );
+                        break 'update_loop;
+                    }
+                };
+            }
+        }
 
     }
 
