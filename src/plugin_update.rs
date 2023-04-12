@@ -5,5 +5,5 @@ use serde::Deserialize;
 pub struct PluginUpdate {
     pub state: Vec<Vec<[u8; 4]>>,
     pub done: bool,
-    pub log_message: Option<String>,
+    pub log_message: Option<Vec<String>>,
 }

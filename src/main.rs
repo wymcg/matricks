@@ -5,7 +5,7 @@ mod matrix_configuration;
 mod plugin_update;
 
 use std::str::from_utf8;
-use std::sync::mpsc::Sender;
+use std::sync::mpsc::{Sender, SendError};
 use std::time::{Duration, Instant};
 use clargs::Args;
 use plugin_iterator::PluginIterator;
@@ -170,9 +170,19 @@ fn main() {
                             }
                         };
 
+                        // send plugin logs
                         match new_update.log_message {
-                            None => {}
-                            Some(msg) => {println!("{msg}")}
+                            None => {/* plugin didn't send us anything, so don't do anything */}
+                            Some(logs) => {
+                                for log in logs {
+                                    // send a log message, identifying as the plugin
+                                    log_tx.send(Log::new(
+                                        LogOrigin::Plugin(plugin_path.clone()),
+                                        LogType::Normal, // assume the plugin log is part of normal operation
+                                        log
+                                    )).expect("Unable to send plugin log to log thread!");
+                                }
+                            }
                         }
 
                         // todo send matrix state to the matrix control thread
