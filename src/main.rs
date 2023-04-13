@@ -3,6 +3,7 @@ mod logging;
 mod plugin_iterator;
 mod matrix_configuration;
 mod plugin_update;
+mod matrix_control_thread;
 
 use std::str::from_utf8;
 use std::sync::mpsc::{Sender, SendError};
@@ -20,6 +21,7 @@ use crate::logging::log_type::LogType;
 use crate::matrix_configuration::MatrixConfiguration;
 use crate::plugin_update::PluginUpdate;
 use crate::plugin_iterator::PluginIteratorError;
+use crate::matrix_control_thread::start_matrix_control;
 
 const VERSION: Option<&str> = option_env!("CARGO_PKG_VERSION");
 
@@ -60,6 +62,9 @@ fn main() {
         }
     };
 
+    // start the matrix control thread
+    log_main(&log_tx, LogType::Normal, "Starting the matrix control thread.".to_string());
+    let (matrix_control_handle, matrix_control_tx) = start_matrix_control(mat_config, log_tx.clone());
 
     // make the plugin iterator
     let plugin_data_list = match PluginIterator::new(args.plugins)
@@ -170,6 +175,18 @@ fn main() {
                             }
                         };
 
+                        // send matrix state to the matrix control thread
+                        match matrix_control_tx.send(new_update.clone()) {
+                            Ok(_) => {/* do nothing if it sent ok */}
+                            Err(_) => {
+                                log_main(
+                                    &log_tx,
+                                    LogType::Error,
+                                    "Unable to send matrix state update to matrix control thread!".to_string());
+                                log_main(&log_tx, LogType::Normal, format!("Quitting Matricks."));
+                            }
+                        };
+
                         // send plugin logs
                         match new_update.log_message {
                             None => {/* plugin didn't send us anything, so don't do anything */}
@@ -184,8 +201,6 @@ fn main() {
                                 }
                             }
                         }
-
-                        // todo send matrix state to the matrix control thread
 
                         // go to the next plugin if the plugin says it is done
                         if new_update.done {
@@ -215,9 +230,13 @@ fn main() {
     log_main(&log_tx, LogType::Normal, format!("Quitting Matricks."));
 
     // close channels
+    drop(matrix_control_tx);
     drop(log_tx);
 
     // join logging and matrix control threads
+    matrix_control_handle
+        .join()
+        .expect("Unable to join matrix control thread!");
     log_thread_handle
         .join()
         .expect("Unable to join log thread!");

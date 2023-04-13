@@ -1,7 +1,7 @@
 use serde::Deserialize;
 
 /// Update retrieved from the plugin every call to the update function
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct PluginUpdate {
     pub state: Vec<Vec<[u8; 4]>>,
     pub done: bool,

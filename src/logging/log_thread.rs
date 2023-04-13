@@ -47,7 +47,7 @@ impl LoggingThread {
         // create the file
         let mut file = File::create(log_path).expect("Failed to create log file!");
 
-        // write each log event to the file as the thread recieves them
+        // write each log event to the file as the thread receives them
         for log in rx {
             writeln!(&mut file, "{}", log.to_string()).expect("Failed to write log to logfile!");
         }
