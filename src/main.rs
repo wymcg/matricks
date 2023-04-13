@@ -6,7 +6,7 @@ mod plugin_update;
 mod matrix_control_thread;
 
 use std::str::from_utf8;
-use std::sync::mpsc::{Sender, SendError};
+use std::sync::mpsc::Sender;
 use std::time::{Duration, Instant};
 use clargs::Args;
 use plugin_iterator::PluginIterator;

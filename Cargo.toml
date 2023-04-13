@@ -12,10 +12,4 @@ glob = "0.3.1"
 extism = "0.3.0"
 serde = "1.0.159"
 serde_json = "1.0.95"
-
-# If this is not for a Raspberry Pi, get dependencies for matrix simulation
-[target.'cfg(not(target = "arm-unknown-linux-gnueabihf"))'.dependencies]
-
-# If this is for a Raspberry Pi, get dependencies for matrix control
-[target.'cfg(target = "arm-unknown-linux-gnueabihf")'.dependencies]
 rs_ws281x = "0.4.4"
