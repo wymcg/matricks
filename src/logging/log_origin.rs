@@ -11,7 +11,4 @@ pub enum LogOrigin {
 
     /// From a plugin with the given identifier
     Plugin(String),
-
-    /// From an unknown origin
-    Other,
 }

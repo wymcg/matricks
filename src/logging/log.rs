@@ -34,7 +34,6 @@ impl ToString for Log {
             LogOrigin::Plugin(id) => {
                 format!("[Plugin({id})]")
             }
-            LogOrigin::Other => "[Other]".to_string(),
         };
 
         let log_type_string = match &self.log_type {

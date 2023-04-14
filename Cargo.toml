@@ -12,4 +12,9 @@ glob = "0.3.1"
 extism = "0.3.0"
 serde = "1.0.159"
 serde_json = "1.0.95"
+
+[target.'cfg(target_arch = "armv7-unknown-linux-gnueabihf")'.dependencies]
 rs_ws281x = "0.4.4"
+
+[target.'cfg(not(target_arch = "armv7-unknown-linux-gnueabihf"))'.dependencies]
+opencv = "0.78.2"
