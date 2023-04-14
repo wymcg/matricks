@@ -39,11 +39,13 @@ fn matrix_control(
     log_tx: Sender<Log>,
     update_rx: Receiver<PluginUpdate>,
 ) {
-    log_tx.send(Log::new(
-        LogOrigin::MatrixControlThread,
-        LogType::Normal,
-        "Starting matrix control thread...".to_string()
-    )).expect("Unable to send log from matrix thread!");
+    log_tx
+        .send(Log::new(
+            LogOrigin::MatrixControlThread,
+            LogType::Normal,
+            "Starting matrix control thread...".to_string(),
+        ))
+        .expect("Unable to send log from matrix thread!");
 
     //// setup the matrix controller
     let mut controller = ControllerBuilder::new()
@@ -84,23 +86,25 @@ fn matrix_control(
 
     //// handle matrix updates as they come
     for update in update_rx {
-    	{
-    	let leds = controller.leds_mut(0);
-        for (y, row) in update.state.iter().enumerate() {
-            for (x, color) in row.iter().enumerate() {
-                leds[coord_to_strip_index[y][x]] = *color;
+        {
+            let leds = controller.leds_mut(0);
+            for (y, row) in update.state.iter().enumerate() {
+                for (x, color) in row.iter().enumerate() {
+                    leds[coord_to_strip_index[y][x]] = *color;
+                }
             }
         }
-        }
-        
+
         match controller.render() {
-            Ok(_) => {/* do nothing */}
+            Ok(_) => { /* do nothing */ }
             Err(_) => {
-            	log_tx.send(Log::new(
-	            LogOrigin::MatrixControlThread,
-		    LogType::Warning,
-		    "Failed to render changes to matrix!".to_string()
-		)).expect("Unable to send log from matrix thread!");
+                log_tx
+                    .send(Log::new(
+                        LogOrigin::MatrixControlThread,
+                        LogType::Warning,
+                        "Failed to render changes to matrix!".to_string(),
+                    ))
+                    .expect("Unable to send log from matrix thread!");
             }
         }
     }
@@ -118,11 +122,13 @@ fn matrix_control(
         point to use something lighter and FFI-less
     */
 
-    log_tx.send(Log::new(
-        LogOrigin::MatrixControlThread,
-        LogType::Normal,
-        "Starting matrix simulation...".to_string()
-    )).expect("Unable to send log from matrix thread!");
+    log_tx
+        .send(Log::new(
+            LogOrigin::MatrixControlThread,
+            LogType::Normal,
+            "Starting matrix simulation...".to_string(),
+        ))
+        .expect("Unable to send log from matrix thread!");
 
     // make a mat to hold the resized mat in the update loop
     let mut resized_mat = unsafe {
@@ -131,7 +137,7 @@ fn matrix_control(
             (matrix_config.width as f32 * matrix_config.magnification) as i32,
             CV_8UC4,
         )
-            .expect("Failed to make Mat to hold resized image!")
+        .expect("Failed to make Mat to hold resized image!")
     };
     let resized_size = resized_mat.size().unwrap();
 

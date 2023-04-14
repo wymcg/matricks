@@ -1,27 +1,27 @@
 mod clargs;
 mod logging;
-mod plugin_iterator;
 mod matrix_configuration;
-mod plugin_update;
 mod matrix_control_thread;
+mod plugin_iterator;
+mod plugin_update;
 
+use clargs::Args;
+use plugin_iterator::PluginIterator;
 use std::str::from_utf8;
 use std::sync::mpsc::Sender;
 use std::time::{Duration, Instant};
-use clargs::Args;
-use plugin_iterator::PluginIterator;
 
+use crate::logging::log::Log;
+use crate::logging::log_origin::LogOrigin;
 use crate::logging::log_thread::LoggingThread;
+use crate::logging::log_type::LogType;
+use crate::matrix_configuration::MatrixConfiguration;
+use crate::matrix_control_thread::start_matrix_control;
+use crate::plugin_iterator::PluginIteratorError;
+use crate::plugin_update::PluginUpdate;
 use clap::Parser;
 use extism::{Context, Plugin};
 use serde_json::from_str;
-use crate::logging::log::Log;
-use crate::logging::log_origin::LogOrigin;
-use crate::logging::log_type::LogType;
-use crate::matrix_configuration::MatrixConfiguration;
-use crate::plugin_update::PluginUpdate;
-use crate::plugin_iterator::PluginIteratorError;
-use crate::matrix_control_thread::start_matrix_control;
 
 const VERSION: Option<&str> = option_env!("CARGO_PKG_VERSION");
 
@@ -38,12 +38,11 @@ fn main() {
     log_main(
         &log_tx,
         LogType::Normal,
-        format!("Starting Matricks v{}", VERSION.unwrap_or("unknown")));
+        format!("Starting Matricks v{}", VERSION.unwrap_or("unknown")),
+    );
 
     // calculate the frame time from the fps option
-    let target_frame_time_ms = Duration::from_nanos(
-        (1_000_000_000.0 / args.fps).round() as u64
-    );
+    let target_frame_time_ms = Duration::from_nanos((1_000_000_000.0 / args.fps).round() as u64);
 
     // make the matrix configuration string
     let mat_config = MatrixConfiguration {
@@ -52,29 +51,39 @@ fn main() {
         target_fps: args.fps,
         serpentine: args.serpentine,
         #[cfg(not(target_arch = "aarch64"))]
-        magnification: args.magnification
+        magnification: args.magnification,
     };
     let mat_config_string = match serde_json::to_string(&mat_config) {
-        Ok(s) => {s}
+        Ok(s) => s,
         Err(_) => {
-            log_main(&log_tx,
-                     LogType::Error,
-                     "Unable to generate matrix configuration information!".to_string());
+            log_main(
+                &log_tx,
+                LogType::Error,
+                "Unable to generate matrix configuration information!".to_string(),
+            );
             log_main(&log_tx, LogType::Normal, "Quitting Matricks.".to_string());
             return;
         }
     };
 
     // start the matrix control thread
-    log_main(&log_tx, LogType::Normal, "Starting the matrix control thread.".to_string());
-    let (matrix_control_handle, matrix_control_tx) = start_matrix_control(mat_config, log_tx.clone());
+    log_main(
+        &log_tx,
+        LogType::Normal,
+        "Starting the matrix control thread.".to_string(),
+    );
+    let (matrix_control_handle, matrix_control_tx) =
+        start_matrix_control(mat_config, log_tx.clone());
 
     // make the plugin iterator
-    let plugin_data_list = match PluginIterator::new(args.plugins)
-    {
-        Ok(plugin_iterator) => {plugin_iterator}
+    let plugin_data_list = match PluginIterator::new(args.plugins) {
+        Ok(plugin_iterator) => plugin_iterator,
         Err(e) => {
-            log_main(&log_tx, LogType::Error, format!("Failed to instantiate plugin list. See error: <{e:?}>"));
+            log_main(
+                &log_tx,
+                LogType::Error,
+                format!("Failed to instantiate plugin list. See error: <{e:?}>"),
+            );
             log_main(&log_tx, LogType::Normal, format!("Quitting Matricks."));
             return;
         }
@@ -95,7 +104,7 @@ fn main() {
                                  format!("Could not read plugin data due to an invalid or missing path '{path}', resulting in a catastrophic error.")
                         );
                         log_main(&log_tx, LogType::Normal, format!("Quitting Matricks."));
-                        return
+                        return;
                     }
                     PluginIteratorError::InvalidPluginPath(path) => {
                         // something went wrong with the path to the active plugin
@@ -114,7 +123,11 @@ fn main() {
         let context = Context::new();
 
         // make a new instance of the plugin
-        log_main(&log_tx, LogType::Normal, format!("Starting plugin '{plugin_path}'"));
+        log_main(
+            &log_tx,
+            LogType::Normal,
+            format!("Starting plugin '{plugin_path}'"),
+        );
         let mut plugin = match Plugin::new(&context, plugin_data, [], true) {
             Ok(plugin) => plugin,
             Err(_) => {
@@ -129,14 +142,16 @@ fn main() {
                 log_main(
                     &log_tx,
                     LogType::Normal,
-                    "Plugin setup complete. Starting update loop...".to_string());
+                    "Plugin setup complete. Starting update loop...".to_string(),
+                );
                 result
             }
             Err(_) => {
                 log_main(
                     &log_tx,
                     LogType::Warning,
-                    "Unable to complete setup! Starting update loop anyway...".to_string());
+                    "Unable to complete setup! Starting update loop anyway...".to_string(),
+                );
                 &[]
             }
         };
@@ -154,12 +169,13 @@ fn main() {
                     Ok(json_result_utf8) => {
                         // convert the result form utf8 to &str
                         let json_result_str = match from_utf8(json_result_utf8) {
-                            Ok(s) => {s}
+                            Ok(s) => s,
                             Err(_) => {
                                 log_main(
                                     &log_tx,
                                     LogType::Warning,
-                                    "Invalid UTF-8 result from plugin! Skipping this plugin...".to_string()
+                                    "Invalid UTF-8 result from plugin! Skipping this plugin..."
+                                        .to_string(),
                                 );
                                 break 'update_loop;
                             }
@@ -167,7 +183,7 @@ fn main() {
 
                         // make a matrix state object from the string
                         let new_update = match from_str::<PluginUpdate>(json_result_str) {
-                            Ok(matrix_state) => {matrix_state}
+                            Ok(matrix_state) => matrix_state,
                             Err(_) => {
                                 log_main(
                                     &log_tx,
@@ -180,27 +196,31 @@ fn main() {
 
                         // send matrix state to the matrix control thread
                         match matrix_control_tx.send(new_update.clone()) {
-                            Ok(_) => {/* do nothing if it sent ok */}
+                            Ok(_) => { /* do nothing if it sent ok */ }
                             Err(_) => {
                                 log_main(
                                     &log_tx,
                                     LogType::Error,
-                                    "Unable to send matrix state update to matrix control thread!".to_string());
+                                    "Unable to send matrix state update to matrix control thread!"
+                                        .to_string(),
+                                );
                                 log_main(&log_tx, LogType::Normal, format!("Quitting Matricks."));
                             }
                         };
 
                         // send plugin logs
                         match new_update.log_message {
-                            None => {/* plugin didn't send us anything, so don't do anything */}
+                            None => { /* plugin didn't send us anything, so don't do anything */ }
                             Some(logs) => {
                                 for log in logs {
                                     // send a log message, identifying as the plugin
-                                    log_tx.send(Log::new(
-                                        LogOrigin::Plugin(plugin_path.clone()),
-                                        LogType::Normal, // assume the plugin log is part of normal operation
-                                        log
-                                    )).expect("Unable to send plugin log to log thread!");
+                                    log_tx
+                                        .send(Log::new(
+                                            LogOrigin::Plugin(plugin_path.clone()),
+                                            LogType::Normal, // assume the plugin log is part of normal operation
+                                            log,
+                                        ))
+                                        .expect("Unable to send plugin log to log thread!");
                                 }
                             }
                         }
@@ -210,24 +230,23 @@ fn main() {
                             log_main(
                                 &log_tx,
                                 LogType::Normal,
-                                "Plugin signalled that it is done. Moving on to the next plugin...".to_string()
+                                "Plugin signalled that it is done. Moving on to the next plugin..."
+                                    .to_string(),
                             );
                             break 'update_loop;
                         }
-
                     }
                     Err(_) => {
                         log_main(
                             &log_tx,
                             LogType::Warning,
-                            "Unable to call update function! Skipping this plugin...".to_string()
+                            "Unable to call update function! Skipping this plugin...".to_string(),
                         );
                         break 'update_loop;
                     }
                 };
             }
         }
-
     }
 
     log_main(&log_tx, LogType::Normal, format!("Quitting Matricks."));
@@ -243,15 +262,11 @@ fn main() {
     log_thread_handle
         .join()
         .expect("Unable to join log thread!");
-
 }
 
 /// Send a log from the main thread
 fn log_main(log_tx: &Sender<Log>, log_type: LogType, description: String) {
-    log_tx.send(
-        Log::new(
-            LogOrigin::MainThread,
-            log_type,
-            description
-        )).expect("Unable to send log from main thread!");
+    log_tx
+        .send(Log::new(LogOrigin::MainThread, log_type, description))
+        .expect("Unable to send log from main thread!");
 }

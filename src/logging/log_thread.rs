@@ -1,12 +1,12 @@
 use crate::logging::log::Log;
+use crate::logging::log_origin::LogOrigin;
+use crate::logging::log_type::LogType;
 use std::fs::File;
 use std::io::Write;
 use std::sync::mpsc;
 use std::thread::JoinHandle;
 use std::time::SystemTime;
 use std::{fs, thread};
-use crate::logging::log_origin::LogOrigin;
-use crate::logging::log_type::LogType;
 
 /// Thread to handle logging of Matricks events
 pub struct LoggingThread {
@@ -50,11 +50,17 @@ impl LoggingThread {
         let mut file = File::create(log_path).expect("Failed to create log file!");
 
         // write an initial log just to make sure everything is working ok
-        writeln!(&mut file, "{}", Log::new(
-            LogOrigin::LoggingThread,
-            LogType::Normal,
-            "Successfully started the logging thread!".to_string()
-        ).to_string()).expect("Failed to write log to logfile!");
+        writeln!(
+            &mut file,
+            "{}",
+            Log::new(
+                LogOrigin::LoggingThread,
+                LogType::Normal,
+                "Successfully started the logging thread!".to_string()
+            )
+            .to_string()
+        )
+        .expect("Failed to write log to logfile!");
 
         // write each log event to the file as the thread receives them
         for log in rx {
