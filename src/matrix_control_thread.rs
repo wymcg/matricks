@@ -9,7 +9,7 @@ use std::thread::JoinHandle;
 
 // import matrix control stuff only if we're compiling for a raspberry pi
 #[cfg(target_arch = "aarch64")]
-use rs_ws281x::{ChannelBuilder, Controller, ControllerBuilder, StripType, WS2811Error};
+use rs_ws281x::{ChannelBuilder, ControllerBuilder, StripType};
 
 // import opencv highgui stuff if we're compiling for anything else
 #[cfg(not(target_arch = "aarch64"))]
@@ -39,6 +39,12 @@ fn matrix_control(
     log_tx: Sender<Log>,
     update_rx: Receiver<PluginUpdate>,
 ) {
+    log_tx.send(Log::new(
+        LogOrigin::MatrixControlThread,
+        LogType::Normal,
+        "Starting matrix control thread...".to_string()
+    )).expect("Unable to send log from matrix thread!");
+
     //// setup the matrix controller
     let mut controller = ControllerBuilder::new()
         .freq(800_000)
@@ -47,9 +53,9 @@ fn matrix_control(
             0, // channel index
             ChannelBuilder::new()
                 .pin(10)
-                .count(64)
+                .count((matrix_config.width * matrix_config.height) as i32)
                 .strip_type(StripType::Ws2812)
-                .brightness(20)
+                .brightness(255)
                 .build(),
         )
         .build()
@@ -76,15 +82,25 @@ fn matrix_control(
         }
     }
 
-    println!("{coord_to_strip_index:?}");
-
-    let leds = controller.leds_mut(0);
-
     //// handle matrix updates as they come
     for update in update_rx {
+    	{
+    	let leds = controller.leds_mut(0);
         for (y, row) in update.state.iter().enumerate() {
             for (x, color) in row.iter().enumerate() {
-                leds[coord_to_strip_index[y][x]] = color.clone();
+                leds[coord_to_strip_index[y][x]] = *color;
+            }
+        }
+        }
+        
+        match controller.render() {
+            Ok(_) => {/* do nothing */}
+            Err(_) => {
+            	log_tx.send(Log::new(
+	            LogOrigin::MatrixControlThread,
+		    LogType::Warning,
+		    "Failed to render changes to matrix!".to_string()
+		)).expect("Unable to send log from matrix thread!");
             }
         }
     }
@@ -104,7 +120,7 @@ fn matrix_control(
 
     log_tx.send(Log::new(
         LogOrigin::MatrixControlThread,
-        LogType::Warning,
+        LogType::Normal,
         "Starting matrix simulation...".to_string()
     )).expect("Unable to send log from matrix thread!");
 

@@ -150,7 +150,7 @@ fn main() {
                 last_frame_time = Instant::now();
 
                 // call the update function
-                let next_matrix_state = match plugin.call("update", "") {
+                match plugin.call("update", "") {
                     Ok(json_result_utf8) => {
                         // convert the result form utf8 to &str
                         let json_result_str = match from_utf8(json_result_utf8) {
