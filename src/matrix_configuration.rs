@@ -16,7 +16,7 @@ pub struct MatrixConfiguration {
     /// In other words, every other row or column is reversed
     pub serpentine: bool,
 
-    #[cfg(not(any(target_os = "armv7-unknown-linux-gnueabihf", target_os = "aarch64-unknown-linux-gnu")))]
+    #[cfg(not(target_arch = "aarch64"))]
     /// Magnification of the simulated matrix
     pub magnification: f32,
 }
