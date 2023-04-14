@@ -2,6 +2,15 @@
 name = "matricks"
 version = "0.1.0"
 edition = "2021"
+authors = ["Will McGloughlin <willem.mcg@gmail.com>"]
+license = "MIT"
+description = "An extensible LED matrix control tool for Raspberry Pis"
+readme = "README.md"
+homepage = "https://github.com/wymcg/matricks"
+repository = "https://github.com/wymcg/matricks"
+keywords = ["cli", "ws281x", "raspberrypi", "wasm"]
+categories = ["command-line-utilities"]
+
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
