@@ -8,7 +8,7 @@ use std::thread;
 use std::thread::JoinHandle;
 
 // import matrix control stuff only if we're compiling for a raspberry pi
-#[cfg(target_os = "aarch64")]
+#[cfg(target_arch = "aarch64")]
 use rs_ws281x::{ChannelBuilder, Controller, ControllerBuilder, StripType, WS2811Error};
 
 // import opencv highgui stuff if we're compiling for anything else
