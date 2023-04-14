@@ -8,11 +8,11 @@ use std::thread;
 use std::thread::JoinHandle;
 
 // import matrix control stuff only if we're compiling for a raspberry pi
-#[cfg(target_os = "armv7-unknown-linux-gnueabihf")]
+#[cfg(any(target_os = "armv7-unknown-linux-gnueabihf", target_os = "aarch64-unknown-linux-gnu"))]
 use rs_ws281x::{ChannelBuilder, Controller, ControllerBuilder, StripType, WS2811Error};
 
 // import opencv highgui stuff if we're compiling for anything else
-#[cfg(not(target_os = "armv7-unknown-linux-gnueabihf"))]
+#[cfg(not(any(target_os = "armv7-unknown-linux-gnueabihf", target_os = "aarch64-unknown-linux-gnu")))]
 use opencv::{
     core::{Mat_AUTO_STEP, CV_8UC4},
     highgui, imgproc,
@@ -33,7 +33,7 @@ pub fn start_matrix_control(
     (handle, tx)
 }
 
-#[cfg(target_os = "armv7-unknown-linux-gnueabihf")]
+#[cfg(any(target_os = "armv7-unknown-linux-gnueabihf", target_os = "aarch64-unknown-linux-gnu"))]
 fn matrix_control(
     matrix_config: MatrixConfiguration,
     log_tx: Sender<Log>,
@@ -90,7 +90,7 @@ fn matrix_control(
     }
 }
 
-#[cfg(not(target_os = "armv7-unknown-linux-gnueabihf"))]
+#[cfg(not(any(target_os = "armv7-unknown-linux-gnueabihf", target_os = "aarch64-unknown-linux-gnu")))]
 fn matrix_control(
     matrix_config: MatrixConfiguration,
     log_tx: Sender<Log>,

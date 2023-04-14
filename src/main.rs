@@ -51,7 +51,7 @@ fn main() {
         height: args.height,
         target_fps: args.fps,
         serpentine: args.serpentine,
-        #[cfg(not(target_arch = "armv7-unknown-linux-gnueabihf"))]
+        #[cfg(not(any(target_arch = "armv7-unknown-linux-gnueabihf", target_arch = "aarch64-unknown-linux-gnu")))]
         magnification: args.magnification
     };
     let mat_config_string = match serde_json::to_string(&mat_config) {

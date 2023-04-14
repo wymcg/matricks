@@ -28,7 +28,7 @@ pub struct Args {
     #[arg(short, long, default_value = "false")]
     pub serpentine: bool,
 
-    #[cfg(not(target_arch = "armv7-unknown-linux-gnueabihf"))]
+    #[cfg(not(any(target_os = "armv7-unknown-linux-gnueabihf", target_os = "aarch64-unknown-linux-gnu")))]
     /// Magnification of the simulated matrix
     #[arg(short, long, default_value = "10")]
     pub magnification: f32,
