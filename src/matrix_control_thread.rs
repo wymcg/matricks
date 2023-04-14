@@ -84,7 +84,7 @@ fn matrix_control(
     for update in update_rx {
         for (y, row) in update.state.iter().enumerate() {
             for (x, color) in row.iter().enumerate() {
-                leds[coord_to_strip_index[y][x]] = color;
+                leds[coord_to_strip_index[y][x]] = color.clone();
             }
         }
     }
