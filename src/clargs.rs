@@ -27,7 +27,6 @@ pub struct Args {
     #[arg(short, long, default_value = "false")]
     pub serpentine: bool,
 
-    #[cfg(not(target_arch = "aarch64"))]
     /// Magnification of the simulated matrix
     #[arg(short, long, default_value = "10")]
     pub magnification: f32,

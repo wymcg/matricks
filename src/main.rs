@@ -47,7 +47,6 @@ fn main() {
         height: args.height,
         target_fps: args.fps,
         serpentine: args.serpentine,
-        #[cfg(not(target_arch = "aarch64"))]
         magnification: args.magnification,
     };
     let mat_config_string = match serde_json::to_string(&mat_config) {
