@@ -5,6 +5,8 @@
 Matricks is a WASM-based extensible LED matrix control tool intended for use on Raspberry Pi devices.
 LED matrix functionality is defined by user-developed plugins, or "tricks", which can be developed in any language that 
 is supported by the [Extism PDK](https://extism.org/docs/category/write-a-plug-in). 
+On non-Raspberry Pi devices, Matricks will simulate a LED matrix and display the simulated matrix state in real time.
+
 See usage details below:
 
 ```
@@ -20,7 +22,6 @@ Options:
   -m, --magnification <MAGNIFICATION>  Magnification of the simulated matrix [default: 10]
   -h, --help                           Print help
   -V, --version                        Print version
-
 ```
 
 ## Installation

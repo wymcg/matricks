@@ -1,11 +1,10 @@
 use crate::logging::log::Log;
 use crate::logging::log_origin::LogOrigin;
 use crate::logging::log_type::LogType;
-use crate::matrix_configuration::MatrixConfiguration;
-use crate::plugin_update::PluginUpdate;
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
 use std::thread::JoinHandle;
+use matricks_plugin::{PluginUpdate, MatrixConfiguration};
 
 // import matrix control stuff only if we're compiling for a raspberry pi
 #[cfg(target_arch = "aarch64")]
