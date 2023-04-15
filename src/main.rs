@@ -1,9 +1,7 @@
 mod clargs;
 mod logging;
-mod matrix_configuration;
 mod matrix_control_thread;
 mod plugin_iterator;
-mod plugin_update;
 
 use clargs::Args;
 use plugin_iterator::PluginIterator;
@@ -15,12 +13,11 @@ use crate::logging::log::Log;
 use crate::logging::log_origin::LogOrigin;
 use crate::logging::log_thread::LoggingThread;
 use crate::logging::log_type::LogType;
-use crate::matrix_configuration::MatrixConfiguration;
 use crate::matrix_control_thread::start_matrix_control;
 use crate::plugin_iterator::PluginIteratorError;
-use crate::plugin_update::PluginUpdate;
 use clap::Parser;
 use extism::{Context, Plugin};
+use matricks_plugin::{MatrixConfiguration, PluginUpdate};
 use serde_json::from_str;
 
 const VERSION: Option<&str> = option_env!("CARGO_PKG_VERSION");
