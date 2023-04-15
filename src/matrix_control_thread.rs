@@ -14,7 +14,7 @@ use rs_ws281x::{ChannelBuilder, ControllerBuilder, StripType};
 // import opencv highgui stuff if we're compiling for anything else
 #[cfg(not(target_arch = "aarch64"))]
 use opencv::{
-    core::{Mat_AUTO_STEP, CV_8UC4},
+    core::CV_8UC4,
     highgui, imgproc,
     prelude::*,
 };
