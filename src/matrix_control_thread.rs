@@ -19,6 +19,13 @@ use opencv::{
     prelude::*,
 };
 
+/// Start a new matrix control thread and return the join handle and a plugin update sender.
+///
+/// # Arguments
+///
+/// * `matrix_config` - A MatrixConfiguration struct containing information about the matrix
+/// * `log_tx` - Sender channel to send logs to the log thread
+///
 pub fn start_matrix_control(
     matrix_config: MatrixConfiguration,
     log_tx: Sender<Log>,
@@ -34,6 +41,7 @@ pub fn start_matrix_control(
 }
 
 #[cfg(target_arch = "aarch64")]
+/// Matrix Control thread loop for real hardware (Raspberry Pi, etc.)
 fn matrix_control(
     matrix_config: MatrixConfiguration,
     log_tx: Sender<Log>,
@@ -111,6 +119,7 @@ fn matrix_control(
 }
 
 #[cfg(not(target_arch = "aarch64"))]
+/// Matrix Control thread loop for a simulated matrix (non-Raspberry Pi, etc.)
 fn matrix_control(
     matrix_config: MatrixConfiguration,
     log_tx: Sender<Log>,
@@ -122,6 +131,7 @@ fn matrix_control(
         point to use something lighter and FFI-less
     */
 
+    // send an initial log
     log_tx
         .send(Log::new(
             LogOrigin::MatrixControlThread,
@@ -161,8 +171,7 @@ fn matrix_control(
                 matrix_config.height as i32,
                 matrix_config.width as i32,
                 CV_8UC4,
-            )
-            .expect("Failed to assign size and channel information to Mat!")
+            ).expect("Failed to assign size and channel information to Mat!")
         };
 
         // resize the mat
@@ -176,12 +185,10 @@ fn matrix_control(
         )
         .expect("Failed to resize the Mat!");
 
-        highgui::imshow("Test", &resized_mat).expect("Couldn't display image");
+        // show the image
+        highgui::imshow("Simulated Matrix", &resized_mat).expect("Couldn't display image");
 
-        let key = highgui::wait_key(1).expect("Couldn't get key");
-        if key == 113 {
-            // quit with q
-            break;
-        }
+        // wait a moment so that the image will actually show
+        let _key = highgui::wait_key(1).expect("Couldn't get key");
     }
 }

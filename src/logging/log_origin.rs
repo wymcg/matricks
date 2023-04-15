@@ -1,4 +1,4 @@
-/// Enum of all possible origins of logs
+/// Origin of a log
 pub enum LogOrigin {
     /// From the main thread
     MainThread,

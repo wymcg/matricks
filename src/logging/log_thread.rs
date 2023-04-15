@@ -10,10 +10,17 @@ use std::{fs, thread};
 
 /// Thread to handle logging of Matricks events
 pub struct LoggingThread {
+    /// Path to the log
     log_path: String,
 }
 
 impl LoggingThread {
+    /// Create a new (inactive) logging thread
+    ///
+    /// # Arguments
+    ///
+    /// * `log_dir` - Directory to write new log to
+    ///
     pub fn new(log_dir: String) -> Self {
         // create the log directory if it doesn't exist
         fs::create_dir_all(log_dir.clone()).expect("Unable to make log directory!");
@@ -30,7 +37,7 @@ impl LoggingThread {
         Self { log_path }
     }
 
-    /// Start the logging thread. Returns the join handle and the log sender
+    /// Start the logging thread, returning the join handle and a sender for logs
     pub fn start(&mut self) -> (JoinHandle<()>, mpsc::Sender<Log>) {
         // make the channels
         let (tx, rx) = mpsc::channel::<Log>();
@@ -45,6 +52,7 @@ impl LoggingThread {
         (handle, tx)
     }
 
+    /// Log writing loop, called by LoggingThread::start() to spawn the log thread
     fn log(log_path: String, rx: mpsc::Receiver<Log>) {
         // create the file
         let mut file = File::create(log_path).expect("Failed to create log file!");

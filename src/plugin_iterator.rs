@@ -6,19 +6,33 @@ use std::fs::metadata;
 /// Error types for PluginIterator
 #[derive(Debug)]
 pub enum PluginIteratorError {
-    InvalidSeedPath(String),   // The seed path is not valid
-    InvalidPluginPath(String), // The given plugin path is not valid
+    /// The seed path is not valid
+    InvalidSeedPath(String),
+
+    /// The given plugin path is not valid
+    InvalidPluginPath(String),
 }
 
 /// Generate Extism plugin environments given a path
 /// If the path is a plugin on its own
 pub struct PluginIterator {
+    /// Path to plugin or directory to search for plugins
     pub seed_path: String,
+
+    /// List of plugin paths generated using the seed path
     plugin_paths: Vec<String>,
+
+    /// The index of the next plugin in plugin_paths
     current_plugin_idx: usize,
 }
 
 impl PluginIterator {
+    /// Make a new plugin iterator
+    ///
+    /// # Arguments
+    ///
+    /// `seed_path` - Path to plugin or directory to search for plugins
+    ///
     pub fn new(seed_path: String) -> Result<Self, PluginIteratorError> {
         // get path metadata
         let md = match metadata(&seed_path) {
@@ -66,8 +80,9 @@ impl PluginIterator {
 impl Iterator for PluginIterator {
     type Item = Result<(String, Vec<u8>), PluginIteratorError>;
 
-    /// Iterate through each plugin and return the data in the .wasm file, along with the plugin path
+    /// Iterate through each plugin and return the data in the .wasm file, along with the path
     fn next(&mut self) -> Option<Self::Item> {
+        // If we're out of plugins, return None so iteration stops
         if self.current_plugin_idx >= self.plugin_paths.len() {
             return None;
         }
@@ -84,6 +99,7 @@ impl Iterator for PluginIterator {
         // increment the current plugin index
         self.current_plugin_idx += 1;
 
+        // return the path and plugin data
         Some(Ok((plugin_path, wasm)))
     }
 }
