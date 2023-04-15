@@ -13,11 +13,7 @@ use rs_ws281x::{ChannelBuilder, ControllerBuilder, StripType};
 
 // import opencv highgui stuff if we're compiling for anything else
 #[cfg(not(target_arch = "aarch64"))]
-use opencv::{
-    core::CV_8UC4,
-    highgui, imgproc,
-    prelude::*,
-};
+use opencv::{core::CV_8UC4, highgui, imgproc, prelude::*};
 
 /// Start a new matrix control thread and return the join handle and a plugin update sender.
 ///
@@ -171,7 +167,8 @@ fn matrix_control(
                 matrix_config.height as i32,
                 matrix_config.width as i32,
                 CV_8UC4,
-            ).expect("Failed to assign size and channel information to Mat!")
+            )
+            .expect("Failed to assign size and channel information to Mat!")
         };
 
         // resize the mat
