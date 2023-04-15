@@ -24,7 +24,6 @@ pub struct Args {
     pub log_dir: String,
 
     /// Data line alternates direction between columns or rows
-    /// In other words, every other row or column is reversed
     #[arg(short, long, default_value = "false")]
     pub serpentine: bool,
 
