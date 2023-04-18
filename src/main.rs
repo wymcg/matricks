@@ -126,7 +126,8 @@ fn main() {
         );
         let mut plugin = match Plugin::new(&context, plugin_data, [], true) {
             Ok(plugin) => plugin,
-            Err(_) => {
+            Err(e) => {
+                log_main(&log_tx, LogType::Warning, format!("Extism reported the following error while attempting to instantiate the plugin: {e:?}"));
                 log_main(&log_tx, LogType::Warning, format!("Unable to instantiate plugin '{plugin_path}'. This plugin will be skipped."));
                 continue;
             }
