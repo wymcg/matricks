@@ -143,7 +143,12 @@ fn main() {
                 );
                 result
             }
-            Err(_) => {
+            Err(e) => {
+                log_main(
+                    &log_tx,
+                    LogType::Warning,
+                    format!("Extism reported the following error while trying to call the setup function:\n\n======\n{e:?}\n======\n"),
+                );
                 log_main(
                     &log_tx,
                     LogType::Warning,
@@ -233,7 +238,12 @@ fn main() {
                             break 'update_loop;
                         }
                     }
-                    Err(_) => {
+                    Err(e) => {
+                        log_main(
+                            &log_tx,
+                            LogType::Warning,
+                            format!("Extism reported the following error while trying to call the update function:\n\n======\n{e:?}\n======\n"),
+                        );
                         log_main(
                             &log_tx,
                             LogType::Warning,
