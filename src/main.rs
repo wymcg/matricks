@@ -48,6 +48,8 @@ fn main() {
         target_fps: args.fps,
         serpentine: args.serpentine,
         magnification: args.magnification,
+        brightness: args.brightness,
+        ..Default::default()
     };
     let mat_config_string = match serde_json::to_string(&mat_config) {
         Ok(s) => s,

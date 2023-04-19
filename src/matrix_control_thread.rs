@@ -60,7 +60,7 @@ fn matrix_control(
                 .pin(10)
                 .count((matrix_config.width * matrix_config.height) as i32)
                 .strip_type(StripType::Ws2812)
-                .brightness(255)
+                .brightness(matrix_config.brightness)
                 .build(),
         )
         .build()

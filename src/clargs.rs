@@ -30,4 +30,8 @@ pub struct Args {
     /// Magnification of the simulated matrix
     #[arg(short, long, default_value = "10")]
     pub magnification: f32,
+
+    /// Brightness of matrix, from 0-255
+    #[arg(short, long, default_value = "255")]
+    pub brightness: u8,
 }
