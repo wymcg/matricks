@@ -20,7 +20,8 @@
 
 title: Matricks
 description: >- # this means to ignore newlines until "baseurl:"
-  User-defined LED matrix control on Raspberry Pi, powered by WebAssembly.
+  Easy but powerful LED matrix control on Raspberry Pi, powered by WebAssembly.
+
 baseurl: "/matricks" # the subpath of your site, e.g. /blog
 url: "https://wymcg.github.io" # the base hostname & protocol for your site, e.g. http://example.com
 repository: "wymcg/matricks"
