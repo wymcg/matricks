@@ -6,3 +6,4 @@ vendor
 log
 target
 test_plugins
+.idea
