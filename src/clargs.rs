@@ -20,7 +20,7 @@ pub struct Args {
     pub fps: f32,
 
     /// Directory to write logs
-    #[arg(short, long, default_value = "log")]
+    #[arg(short = 'L', long = "log", default_value = "log")]
     pub log_dir: String,
 
     /// Data line alternates direction between columns or rows
@@ -38,4 +38,8 @@ pub struct Args {
     /// Maximum time (in seconds) that a single plugin can run before moving on to the next one. No time limit by default.
     #[arg(short, long)]
     pub time_limit: Option<u64>,
+
+    /// Loop plugin or set of plugins indefinitely
+    #[arg(short = 'l', long = "loop", default_value = "false")]
+    pub loop_plugins: bool,
 }
