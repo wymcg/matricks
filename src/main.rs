@@ -73,204 +73,218 @@ fn main() {
     let (matrix_control_handle, matrix_control_tx) =
         start_matrix_control(mat_config, log_tx.clone());
 
-    // make the plugin iterator
-    let plugin_data_list = match PluginIterator::new(args.plugins) {
-        Ok(plugin_iterator) => plugin_iterator,
-        Err(e) => {
+    // the main loop, which is run infinitely if the loop command line flag is set
+    'main_loop: loop {
+        // make the plugin iterator
+        let plugin_data_list = match PluginIterator::new(args.plugins.clone()) {
+            Ok(plugin_iterator) => plugin_iterator,
+            Err(e) => {
+                log_main(
+                    &log_tx,
+                    LogType::Error,
+                    format!("Failed to instantiate plugin list. See error: <{e:?}>"),
+                );
+                log_main(&log_tx, LogType::Normal, format!("Quitting Matricks."));
+                return;
+            }
+        };
+
+        ////// PLUGIN LOOP
+        for plugin_result in plugin_data_list {
+            // check if the plugin data was successfully read
+            let (plugin_path, plugin_data) = match plugin_result {
+                Ok(data) => data,
+                Err(error) => {
+                    match error {
+                        PluginIteratorError::InvalidSeedPath(path) => {
+                            // the seed path is invalid, meaning that no plugins can be read.
+                            // this should never ever happen
+                            log_main(&log_tx,
+                                     LogType::Error,
+                                     format!("Could not read plugin data due to an invalid or missing path '{path}', resulting in a catastrophic error.")
+                            );
+                            log_main(&log_tx, LogType::Normal, format!("Quitting Matricks."));
+                            return;
+                        }
+                        PluginIteratorError::InvalidPluginPath(path) => {
+                            // something went wrong with the path to the active plugin
+                            // we can't run this plugin, but we might be able to run others
+                            log_main(&log_tx,
+                                     LogType::Warning,
+                                     format!("Could not read plugin data due to an invalid or missing path '{path}'. This plugin will be skipped.")
+                            );
+                        }
+                    }
+                    continue;
+                }
+            };
+
+            // make a new context for the plugin
+            let context = Context::new();
+
+            // make a new instance of the plugin
             log_main(
                 &log_tx,
-                LogType::Error,
-                format!("Failed to instantiate plugin list. See error: <{e:?}>"),
+                LogType::Normal,
+                format!("Starting plugin '{plugin_path}'"),
             );
-            log_main(&log_tx, LogType::Normal, format!("Quitting Matricks."));
-            return;
-        }
-    };
+            let mut plugin = match Plugin::new(&context, plugin_data, [], true) {
+                Ok(plugin) => plugin,
+                Err(e) => {
+                    log_main(&log_tx, LogType::Warning, format!("Extism reported the following error while attempting to instantiate the plugin: {e:?}"));
+                    log_main(&log_tx, LogType::Warning, format!("Unable to instantiate plugin '{plugin_path}'. This plugin will be skipped."));
+                    continue;
+                }
+            };
 
-    ////// PLUGIN LOOP
-    for plugin_result in plugin_data_list {
-        // check if the plugin data was successfully read
-        let (plugin_path, plugin_data) = match plugin_result {
-            Ok(data) => data,
-            Err(error) => {
-                match error {
-                    PluginIteratorError::InvalidSeedPath(path) => {
-                        // the seed path is invalid, meaning that no plugins can be read.
-                        // this should never ever happen
-                        log_main(&log_tx,
-                                 LogType::Error,
-                                 format!("Could not read plugin data due to an invalid or missing path '{path}', resulting in a catastrophic error.")
-                        );
-                        log_main(&log_tx, LogType::Normal, format!("Quitting Matricks."));
-                        return;
-                    }
-                    PluginIteratorError::InvalidPluginPath(path) => {
-                        // something went wrong with the path to the active plugin
-                        // we can't run this plugin, but we might be able to run others
-                        log_main(&log_tx,
-                                 LogType::Warning,
-                                 format!("Could not read plugin data due to an invalid or missing path '{path}'. This plugin will be skipped.")
-                        );
+            // call setup function of current active plugin
+            let _setup_result = match plugin.call("setup", &mat_config_string) {
+                Ok(result) => {
+                    log_main(
+                        &log_tx,
+                        LogType::Normal,
+                        "Plugin setup complete. Starting update loop...".to_string(),
+                    );
+                    result
+                }
+                Err(e) => {
+                    log_main(
+                        &log_tx,
+                        LogType::Warning,
+                        format!("Extism reported the following error while trying to call the setup function:\n\n======\n{e:?}\n======\n"),
+                    );
+                    log_main(
+                        &log_tx,
+                        LogType::Warning,
+                        "Unable to complete setup! Starting update loop anyway...".to_string(),
+                    );
+                    &[]
+                }
+            };
+
+            // mark the time when this plugin started its update loop
+            let plugin_start_time = Instant::now();
+
+            // setup the last frame time variable
+            let mut last_frame_time = Instant::now();
+
+            // run an update every frame
+            'update_loop: loop {
+                // move on to the next plugin if the plugin time limit has been exceeded
+                match args.time_limit {
+                    None => { /* there is no time limit, so do nothing */ }
+                    Some(time_limit) => {
+                        // move on to the next plugin if this plugin has been running longer than the time limit
+                        if Instant::now() - plugin_start_time > Duration::from_secs(time_limit) {
+                            break 'update_loop;
+                        }
                     }
                 }
-                continue;
-            }
-        };
 
-        // make a new context for the plugin
-        let context = Context::new();
+                // call the update function if a frame has passed
+                if (Instant::now() - last_frame_time) >= target_frame_time_ms {
+                    // reset the last frame time
+                    last_frame_time = Instant::now();
 
-        // make a new instance of the plugin
-        log_main(
-            &log_tx,
-            LogType::Normal,
-            format!("Starting plugin '{plugin_path}'"),
-        );
-        let mut plugin = match Plugin::new(&context, plugin_data, [], true) {
-            Ok(plugin) => plugin,
-            Err(e) => {
-                log_main(&log_tx, LogType::Warning, format!("Extism reported the following error while attempting to instantiate the plugin: {e:?}"));
-                log_main(&log_tx, LogType::Warning, format!("Unable to instantiate plugin '{plugin_path}'. This plugin will be skipped."));
-                continue;
-            }
-        };
+                    // call the update function
+                    match plugin.call("update", "") {
+                        Ok(json_result_utf8) => {
+                            // convert the result form utf8 to &str
+                            let json_result_str = match from_utf8(json_result_utf8) {
+                                Ok(s) => s,
+                                Err(_) => {
+                                    log_main(
+                                        &log_tx,
+                                        LogType::Warning,
+                                        "Invalid UTF-8 result from plugin! Skipping this plugin..."
+                                            .to_string(),
+                                    );
+                                    break 'update_loop;
+                                }
+                            };
 
-        // call setup function of current active plugin
-        let _setup_result = match plugin.call("setup", &mat_config_string) {
-            Ok(result) => {
-                log_main(
-                    &log_tx,
-                    LogType::Normal,
-                    "Plugin setup complete. Starting update loop...".to_string(),
-                );
-                result
-            }
-            Err(e) => {
-                log_main(
-                    &log_tx,
-                    LogType::Warning,
-                    format!("Extism reported the following error while trying to call the setup function:\n\n======\n{e:?}\n======\n"),
-                );
-                log_main(
-                    &log_tx,
-                    LogType::Warning,
-                    "Unable to complete setup! Starting update loop anyway...".to_string(),
-                );
-                &[]
-            }
-        };
+                            // make a matrix state object from the string
+                            let new_update = match from_str::<PluginUpdate>(json_result_str) {
+                                Ok(matrix_state) => matrix_state,
+                                Err(_) => {
+                                    log_main(
+                                        &log_tx,
+                                        LogType::Warning,
+                                        "Unable to deserialize result from plugin! Skipping this plugin...".to_string()
+                                    );
+                                    break 'update_loop;
+                                }
+                            };
 
-        // mark the time when this plugin started its update loop
-        let plugin_start_time = Instant::now();
+                            // send matrix state to the matrix control thread
+                            match matrix_control_tx.send(new_update.clone()) {
+                                Ok(_) => { /* do nothing if it sent ok */ }
+                                Err(_) => {
+                                    log_main(
+                                        &log_tx,
+                                        LogType::Error,
+                                        "Unable to send matrix state update to matrix control thread!"
+                                            .to_string(),
+                                    );
+                                    log_main(
+                                        &log_tx,
+                                        LogType::Normal,
+                                        format!("Quitting Matricks."),
+                                    );
+                                }
+                            };
 
-        // setup the last frame time variable
-        let mut last_frame_time = Instant::now();
-
-        // run an update every frame
-        'update_loop: loop {
-            // move on to the next plugin if the plugin time limit has been exceeded
-            match args.time_limit {
-                None => {/* there is no time limit, so do nothing */}
-                Some(time_limit) => {
-                    // move on to the next plugin if this plugin has been running longer than the time limit
-                    if Instant::now() - plugin_start_time > Duration::from_secs(time_limit) {
-                        break 'update_loop
-                    }
-                }
-            }
-
-            // call the update function if a frame has passed
-            if (Instant::now() - last_frame_time) >= target_frame_time_ms {
-                // reset the last frame time
-                last_frame_time = Instant::now();
-
-                // call the update function
-                match plugin.call("update", "") {
-                    Ok(json_result_utf8) => {
-                        // convert the result form utf8 to &str
-                        let json_result_str = match from_utf8(json_result_utf8) {
-                            Ok(s) => s,
-                            Err(_) => {
-                                log_main(
-                                    &log_tx,
-                                    LogType::Warning,
-                                    "Invalid UTF-8 result from plugin! Skipping this plugin..."
-                                        .to_string(),
-                                );
-                                break 'update_loop;
-                            }
-                        };
-
-                        // make a matrix state object from the string
-                        let new_update = match from_str::<PluginUpdate>(json_result_str) {
-                            Ok(matrix_state) => matrix_state,
-                            Err(_) => {
-                                log_main(
-                                    &log_tx,
-                                    LogType::Warning,
-                                    "Unable to deserialize result from plugin! Skipping this plugin...".to_string()
-                                );
-                                break 'update_loop;
-                            }
-                        };
-
-                        // send matrix state to the matrix control thread
-                        match matrix_control_tx.send(new_update.clone()) {
-                            Ok(_) => { /* do nothing if it sent ok */ }
-                            Err(_) => {
-                                log_main(
-                                    &log_tx,
-                                    LogType::Error,
-                                    "Unable to send matrix state update to matrix control thread!"
-                                        .to_string(),
-                                );
-                                log_main(&log_tx, LogType::Normal, format!("Quitting Matricks."));
-                            }
-                        };
-
-                        // send plugin logs
-                        match new_update.log_message {
-                            None => { /* plugin didn't send us anything, so don't do anything */ }
-                            Some(logs) => {
-                                for log in logs {
-                                    // send a log message, identifying as the plugin
-                                    log_tx
-                                        .send(Log::new(
-                                            LogOrigin::Plugin(plugin_path.clone()),
-                                            LogType::Normal, // assume the plugin log is part of normal operation
-                                            log,
-                                        ))
-                                        .expect("Unable to send plugin log to log thread!");
+                            // send plugin logs
+                            match new_update.log_message {
+                                None => { /* plugin didn't send us anything, so don't do anything */
+                                }
+                                Some(logs) => {
+                                    for log in logs {
+                                        // send a log message, identifying as the plugin
+                                        log_tx
+                                            .send(Log::new(
+                                                LogOrigin::Plugin(plugin_path.clone()),
+                                                LogType::Normal, // assume the plugin log is part of normal operation
+                                                log,
+                                            ))
+                                            .expect("Unable to send plugin log to log thread!");
+                                    }
                                 }
                             }
-                        }
 
-                        // go to the next plugin if the plugin says it is done
-                        if new_update.done {
+                            // go to the next plugin if the plugin says it is done
+                            if new_update.done {
+                                log_main(
+                                    &log_tx,
+                                    LogType::Normal,
+                                    "Plugin signalled that it is done. Moving on to the next plugin..."
+                                        .to_string(),
+                                );
+                                break 'update_loop;
+                            }
+                        }
+                        Err(e) => {
                             log_main(
                                 &log_tx,
-                                LogType::Normal,
-                                "Plugin signalled that it is done. Moving on to the next plugin..."
+                                LogType::Warning,
+                                format!("Extism reported the following error while trying to call the update function:\n\n======\n{e:?}\n======\n"),
+                            );
+                            log_main(
+                                &log_tx,
+                                LogType::Warning,
+                                "Unable to call update function! Skipping this plugin..."
                                     .to_string(),
                             );
                             break 'update_loop;
                         }
-                    }
-                    Err(e) => {
-                        log_main(
-                            &log_tx,
-                            LogType::Warning,
-                            format!("Extism reported the following error while trying to call the update function:\n\n======\n{e:?}\n======\n"),
-                        );
-                        log_main(
-                            &log_tx,
-                            LogType::Warning,
-                            "Unable to call update function! Skipping this plugin...".to_string(),
-                        );
-                        break 'update_loop;
-                    }
-                };
+                    };
+                }
             }
+        }
+
+        // break if the loop flag is not set
+        if !args.loop_plugins {
+            break 'main_loop
         }
     }
 
