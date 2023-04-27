@@ -34,4 +34,8 @@ pub struct Args {
     /// Brightness of matrix, from 0-255
     #[arg(short, long, default_value = "255")]
     pub brightness: u8,
+
+    /// Maximum time (in seconds) that a single plugin can run before moving on to the next one. No time limit by default.
+    #[arg(short, long)]
+    pub time_limit: Option<u64>,
 }

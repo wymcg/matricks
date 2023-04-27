@@ -160,10 +160,26 @@ fn main() {
             }
         };
 
+        // mark the time when this plugin started its update loop
+        let plugin_start_time = Instant::now();
+
         // setup the last frame time variable
         let mut last_frame_time = Instant::now();
+
+        // run an update every frame
         'update_loop: loop {
-            // only call the update function if a frame has passes
+            // move on to the next plugin if the plugin time limit has been exceeded
+            match args.time_limit {
+                None => {/* there is no time limit, so do nothing */}
+                Some(time_limit) => {
+                    // move on to the next plugin if this plugin has been running longer than the time limit
+                    if Instant::now() - plugin_start_time > Duration::from_secs(time_limit) {
+                        break 'update_loop
+                    }
+                }
+            }
+
+            // call the update function if a frame has passed
             if (Instant::now() - last_frame_time) >= target_frame_time_ms {
                 // reset the last frame time
                 last_frame_time = Instant::now();
