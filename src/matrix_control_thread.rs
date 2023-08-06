@@ -5,14 +5,7 @@ use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
 use std::thread::JoinHandle;
 use matricks_plugin::{PluginUpdate, MatrixConfiguration};
-
-// import matrix control stuff only if we're compiling for a raspberry pi
-#[cfg(target_arch = "aarch64")]
 use rs_ws281x::{ChannelBuilder, ControllerBuilder, StripType};
-
-// import opencv highgui stuff if we're compiling for anything else
-#[cfg(not(target_arch = "aarch64"))]
-use opencv::{core::CV_8UC4, highgui, imgproc, prelude::*};
 
 /// Start a new matrix control thread and return the join handle and a plugin update sender.
 ///
@@ -35,7 +28,6 @@ pub fn start_matrix_control(
     (handle, tx)
 }
 
-#[cfg(target_arch = "aarch64")]
 /// Matrix Control thread loop for real hardware (Raspberry Pi, etc.)
 fn matrix_control(
     matrix_config: MatrixConfiguration,
@@ -110,81 +102,5 @@ fn matrix_control(
                     .expect("Unable to send log from matrix thread!");
             }
         }
-    }
-}
-
-#[cfg(not(target_arch = "aarch64"))]
-/// Matrix Control thread loop for a simulated matrix (non-Raspberry Pi, etc.)
-fn matrix_control(
-    matrix_config: MatrixConfiguration,
-    log_tx: Sender<Log>,
-    update_rx: Receiver<PluginUpdate>,
-) {
-    /*
-        This really sucks. There is no reason this should use something as big as OpenCV just
-        to render a few pixels on a screen. For everyone's sake, this should be rewritten at some
-        point to use something lighter and FFI-less
-    */
-
-    // send an initial log
-    log_tx
-        .send(Log::new(
-            LogOrigin::MatrixControlThread,
-            LogType::Normal,
-            "Starting matrix simulation...".to_string(),
-        ))
-        .expect("Unable to send log from matrix thread!");
-
-    // make a mat to hold the resized mat in the update loop
-    let mut resized_mat = unsafe {
-        Mat::new_rows_cols(
-            (matrix_config.height as f32 * matrix_config.magnification) as i32,
-            (matrix_config.width as f32 * matrix_config.magnification) as i32,
-            CV_8UC4,
-        )
-        .expect("Failed to make Mat to hold resized image!")
-    };
-    let resized_size = resized_mat.size().unwrap();
-
-    // the update loop
-    for update in update_rx {
-        // flatten the state so that we can make an opencv mat with it
-        let state: Vec<u8> = update
-            .state
-            .iter()
-            .flatten()
-            .flatten()
-            .map(|val| val.clone())
-            .collect();
-
-        // create the mat
-        let mut mat = Mat::from_slice(&state).expect("Failed make Mat from slice!");
-
-        // size the mat and set the color channel info
-        unsafe {
-            mat.create_rows_cols(
-                matrix_config.height as i32,
-                matrix_config.width as i32,
-                CV_8UC4,
-            )
-            .expect("Failed to assign size and channel information to Mat!")
-        };
-
-        // resize the mat
-        imgproc::resize(
-            &mat,
-            &mut resized_mat,
-            resized_size,
-            0.0,
-            0.0,
-            imgproc::INTER_LINEAR,
-        )
-        .expect("Failed to resize the Mat!");
-
-        // show the image
-        highgui::imshow("Simulated Matrix", &resized_mat).expect("Couldn't display image");
-
-        // wait a moment so that the image will actually show
-        let _key = highgui::wait_key(1).expect("Couldn't get key");
     }
 }
