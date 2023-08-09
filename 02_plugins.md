@@ -8,19 +8,14 @@ This page describes the basic structure of Matricks plugins, and how to develop 
 ***If you're interested in examples of plugin development in other languages, check out the examples on the [GitHub](https://github.com/wymcg/matricks).***
 
 # Prerequisites
-# Installing Rust and the `wasm32-wasi` Target
+## Install the Simulator
+Simtricks is a simulator for Matricks plugin development. For installation instructions and usage information, check out [Simtricks](https://github.com/wymcg/simtricks).
+
+## Install Rust and the `wasm32-wasi` Target
 If you don't have Rust installed already, you can do so by running the command listed on the [rustup website](https://rustup.rs/). Once you have Rust installed, use `rustup` to install the `wasm32-wasi` toolchain:
 ```
 rustup target add wasm32-wasi
 ```
-## Installing Matricks
-To be able to run your plugins, you will need to install Matricks on your device. When installed on a Raspberry Pi, Matricks will drive a connected LED matrix, but when installed on any other device, you can see the output of your plugins in a simulated matrix.
-
-The latest version of Matricks can be installed from [crates.io](https://crates.io/crates/matricks) using Cargo:
-```
-cargo install matricks
-```
-Matricks requires further dependencies to be installed depending on the platform you're installing on. See the [GitHub page](https://github.com/wymcg/matricks) for more information.
 
 # Plugin Structure
 In order to be a valid Matricks plugin, a plugin must meet the following requirements:
