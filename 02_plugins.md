@@ -6,10 +6,8 @@ permalink: /plugins/
 
 This page describes how to get started writing plugins for Matricks in Rust, and will **assume basic knowledge of Rust**.
 
-Since Matricks is built on top of [Extism](https://extism.org), plugins can (in theory) be built in several different languages, including C, Zig, Go, Haskell, AssemblyScript, and JavaScript [^js]. 
+Since Matricks is built on top of [Extism](https://extism.org), plugins can (in theory) be built in several different languages, including C, Zig, Go, Haskell, AssemblyScript, and JavaScript. 
 Plugin development in languages other than Rust untested and not recommended.
-
-[^js]: At the time of writing, JavaScript support for the Extism PDK is highly experimental. If you know JavaScript or TypeScript and really don't want to use Rust to make a plugin, I recommend looking into using AssemblyScript.
 
 # Prerequisites
 # Installing Rust and the `wasm32-wasi` Target
