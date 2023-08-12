@@ -103,4 +103,12 @@ fn matrix_control(
             }
         }
     }
+
+    // When the update channel closes, clear the LEDs
+    let leds = controller.leds_mut(0);
+    for led in leds {
+        *led = [0, 0, 0, 0];
+    }
+    controller.render().expect("Unable to clear screen while quitting!")
+
 }
