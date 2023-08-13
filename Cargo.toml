@@ -21,5 +21,5 @@ glob = "0.3.1"
 extism = "0.3.0"
 serde = "1.0.159"
 serde_json = "1.0.95"
-matricks_plugin = "0.1.4"
+matricks_plugin = { git = "https://github.com/wymcg/matricks_plugin" }
 rs_ws281x = "0.4.4"
