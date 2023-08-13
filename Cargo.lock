@@ -1268,9 +1268,8 @@ dependencies = [
 
 [[package]]
 name = "matricks_plugin"
-version = "0.1.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "450889cc5d5570824876437f7a9b3dab383d8d1702ef19f53d7cb3c1f6ac357a"
+version = "0.1.5"
+source = "git+https://github.com/wymcg/matricks_plugin#1fbdfa69fea6912ef074434e83a85e90cc8ea496"
 dependencies = [
  "serde",
 ]
