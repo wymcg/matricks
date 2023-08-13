@@ -19,7 +19,6 @@ Options:
   -f, --fps <FPS>                      Target framerate at which to drive the matrix [default: 30]
   -L, --log <LOG_DIR>                  Directory to write logs [default: log]
   -s, --serpentine                     Data line alternates direction between columns or rows
-  -m, --magnification <MAGNIFICATION>  Magnification of the simulated matrix [default: 10]
   -b, --brightness <BRIGHTNESS>        Brightness of matrix, from 0-255 [default: 255]
   -t, --time-limit <TIME_LIMIT>        Maximum time (in seconds) that a single plugin can run before moving on to the next one. No time limit by default
   -l, --loop                           Loop plugin or set of plugins indefinitely
