@@ -5,8 +5,9 @@ Build instructions for each example are given each example's README.
 
 If you're looking for some examples of some more complicated plugins, check out a few of these repositories:
 
-| Name                                                  | Author                                       | Description                            |
-|-------------------------------------------------------|----------------------------------------------|----------------------------------------
-| [A* Visualizer](https://github.com/wymcg/astar_trick) | [Will McGloughlin](https://github.com/wymcg) | Generates a maze and solves it with A* |
+| Name                                                      | Language | Description                                 |
+|-----------------------------------------------------------|----------|---------------------------------------------
+| [A* Visualizer](https://github.com/wymcg/astar_trick)     | Rust     | Generates a maze and solves it with A*      |
+| [Perlin Noise](https://github.com/wymcg/perlin_trick)     | Rust     | Shows some pretty colors using Perlin noise |
 
 Want to add your plugin to the list? Make a PR!
