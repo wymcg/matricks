@@ -31,14 +31,8 @@ pub fn update(_: ()) -> FnResult<Json<PluginUpdate>> {
     let mut counter = COUNTER.lock().unwrap();
     let counter = counter.deref_mut();
 
-    // Make a 2D vector of all red, with intensity set by the counter value
-    let mut led_state: Vec<Vec<[u8; 4]>> = vec![];
-    for y in 0..config.width {
-        led_state.push(vec![]);
-        for _x in 0..config.height {
-            led_state[y].push([*counter, *counter, *counter, 0]); // BGRA order!
-        }
-    }
+    // Make a 2D vector of all white, with intensity set by the counter value
+    let led_state: Vec<Vec<[u8; 4]>> = vec![vec![[*counter; 4]; config.width]; config.height];
 
     // Increment counter and determine whether to stop providing updates
     if *counter == 255 {
