@@ -20,14 +20,22 @@ pub struct Args {
     pub fps: f32,
 
     /// Directory to write logs
-    #[arg(short, long, default_value = "log")]
+    #[arg(short = 'L', long = "log", default_value = "log")]
     pub log_dir: String,
 
     /// Data line alternates direction between columns or rows
     #[arg(short, long, default_value = "false")]
     pub serpentine: bool,
 
-    /// Magnification of the simulated matrix
-    #[arg(short, long, default_value = "10")]
-    pub magnification: f32,
+    /// Brightness of matrix, from 0-255
+    #[arg(short, long, default_value = "255")]
+    pub brightness: u8,
+
+    /// Maximum time (in seconds) that a single plugin can run before moving on to the next one. No time limit by default.
+    #[arg(short, long)]
+    pub time_limit: Option<u64>,
+
+    /// Loop plugin or set of plugins indefinitely
+    #[arg(short = 'l', long = "loop", default_value = "false")]
+    pub loop_plugins: bool,
 }
