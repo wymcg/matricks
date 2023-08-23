@@ -37,7 +37,7 @@ Options:
 - On another device,
   - Install Rust and Cargo from [the Rust website](https://rustup.rs)
   - Run `rustup target add aarch64-unknown-linux-gnu`
-  - Build with `cargo build --release`[^3]
+  - Clone this repository and build with `cargo build --release`[^3]
   - Transfer the produced executable to your Raspberry Pi
 - On your Raspberry Pi,
   - Install 64-bit Raspbian[^1]
