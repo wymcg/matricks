@@ -1,10 +1,10 @@
 mod clargs;
-mod matrix_control;
+mod control;
 mod plugin_iterator;
-mod matricks;
+mod core;
 
 use crate::clargs::{MatricksArgs, MatricksSubcommand};
-use crate::matricks::core;
+use crate::core::matricks_core;
 
 use std::fs;
 use clap::Parser;
@@ -24,10 +24,12 @@ fn main() {
     log::info!("Starting Matricks v{}.", VERSION.unwrap_or("unknown"));
 
     // Pull config from command line argument
-    let config = match args.config {
+    match args.config {
         MatricksSubcommand::Manual(config) => {
             log::info!("Matrix configuration has been manually supplied.");
-            config
+
+            // Run the Matricks core using the manually supplied config
+            matricks_core(config);
         }
         MatricksSubcommand::Auto(file_info) => {
             // Read the file to a string
@@ -41,7 +43,8 @@ fn main() {
                 }
             };
 
-            match toml::from_str(&matrix_config_string_toml) {
+            // Pull the matrix config out of the string
+            let config = match toml::from_str(&matrix_config_string_toml) {
                 Ok(config) => {
                     log::info!("Matrix configuration has been supplied from a configuration file.");
                     config
@@ -52,8 +55,10 @@ fn main() {
                     log::info!("Quitting Matricks.");
                     return;
                 }
-            }
+            };
 
+            // Run the Matricks core using the retrieved config
+            matricks_core(config);
         }
         MatricksSubcommand::Save {
             info,
@@ -86,5 +91,4 @@ fn main() {
         }
     };
 
-    core(config);
 }

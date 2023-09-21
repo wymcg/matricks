@@ -1,6 +1,6 @@
 use crate::clargs::MatrixConfigArgs;
 use crate::plugin_iterator::{PluginIterator, PluginIteratorError};
-use crate::matrix_control::start_matrix_control;
+use crate::control::start_matrix_control;
 
 use std::ffi::OsStr;
 use std::path::Path;
@@ -11,7 +11,7 @@ use extism::{Context, Plugin};
 use matricks_plugin::{MatrixConfiguration, PluginUpdate};
 use serde_json::from_str;
 
-pub fn core(config: MatrixConfigArgs) {
+pub fn matricks_core(config: MatrixConfigArgs) {
     // Calculate the frame time from the FPS option
     let target_frame_time_ms = Duration::from_nanos((1_000_000_000.0 / config.fps).round() as u64);
 

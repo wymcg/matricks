@@ -18,13 +18,13 @@ pub fn start_matrix_control(
     let (tx, rx) = channel::<PluginUpdate>();
 
     // Spawn a the matrix control thread
-    let handle = thread::spawn(|| control(matrix_config, rx));
+    let handle = thread::spawn(|| matrix_controller(matrix_config, rx));
 
     // Return the matrix control thread handle and the plugin update transmit channel
     (handle, tx)
 }
 
-fn control(matrix_config: MatrixConfiguration, update_rx: Receiver<PluginUpdate>) {
+fn matrix_controller(matrix_config: MatrixConfiguration, update_rx: Receiver<PluginUpdate>) {
 
     //// Setup the matrix controller
     let mut controller = match ControllerBuilder::new()
