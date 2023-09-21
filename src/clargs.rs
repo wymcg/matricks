@@ -1,8 +1,49 @@
-use clap::Parser;
+use clap::{Args, Parser, Subcommand};
+use serde::{Deserialize, Serialize};
 
-#[derive(Parser, Debug)]
+#[derive(Parser)]
 #[command(author, version, about, long_about=None)]
-pub struct Args {
+pub struct MatricksArgs {
+    #[command(subcommand)]
+    pub config: MatricksSubcommand,
+}
+
+#[derive(Subcommand)]
+pub enum MatricksSubcommand {
+    /// Start Matricks using command line arguments
+    Manual(MatricksConfigArgs),
+
+    /// Start Matricks using a configuration file
+    Auto(ConfigurationFileReadInfo),
+
+    /// Save a command line configuration to a .toml configuration file
+    Save {
+        #[command(flatten)]
+        info: ConfigurationFileWriteInfo,
+
+        #[command(flatten)]
+        matrix_config: MatricksConfigArgs,
+    }
+}
+
+/// Information needed to read a configuration file
+#[derive(Args, Clone)]
+pub struct ConfigurationFileReadInfo {
+    /// Path to a .toml configuration file
+    #[arg(global = true)]
+    pub path: String,
+}
+
+/// Information needed to write a configuration file
+#[derive(Args, Clone)]
+pub struct ConfigurationFileWriteInfo {
+    /// Location to write configuration file
+    #[arg(global = true)]
+    pub path: String,
+}
+
+#[derive(Args, Clone, Serialize, Deserialize)]
+pub struct MatricksConfigArgs {
     /// Path to plugin or directory of plugins
     #[arg(short, long)]
     pub plugins: String,

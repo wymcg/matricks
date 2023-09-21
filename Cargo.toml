@@ -1,6 +1,6 @@
 [package]
 name = "matricks"
-version = "0.2.2-alpha.1"
+version = "0.2.2-alpha.2"
 edition = "2021"
 authors = ["Will McGloughlin <willem.mcg@gmail.com>"]
 license = "MIT"
@@ -21,6 +21,7 @@ glob = "0.3.1"
 extism = "0.3.0"
 serde = "1.0.188"
 serde_json = "1.0.107"
+toml = "0.8.0"
 matricks_plugin = "0.1.4"
 rs_ws281x = "0.4.4"
 env_logger = "0.10.0"
