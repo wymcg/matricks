@@ -1,6 +1,3 @@
-use crate::logging::log::Log;
-use crate::logging::log_origin::LogOrigin;
-use crate::logging::log_type::LogType;
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
 use std::thread::JoinHandle;
@@ -16,13 +13,12 @@ use rs_ws281x::{ChannelBuilder, ControllerBuilder, StripType};
 ///
 pub fn start_matrix_control(
     matrix_config: MatrixConfiguration,
-    log_tx: Sender<Log>,
 ) -> (JoinHandle<()>, Sender<PluginUpdate>) {
     // make the plugin update channel
     let (tx, rx) = channel::<PluginUpdate>();
 
     // spawn a the matrix control thread
-    let handle = thread::spawn(|| matrix_control(matrix_config, log_tx, rx));
+    let handle = thread::spawn(|| matrix_control(matrix_config, rx));
 
     // return the matrix control thread handle and the plugin update transmit channel
     (handle, tx)
@@ -31,16 +27,9 @@ pub fn start_matrix_control(
 /// Matrix Control thread loop for real hardware (Raspberry Pi, etc.)
 fn matrix_control(
     matrix_config: MatrixConfiguration,
-    log_tx: Sender<Log>,
     update_rx: Receiver<PluginUpdate>,
 ) {
-    log_tx
-        .send(Log::new(
-            LogOrigin::MatrixControlThread,
-            LogType::Normal,
-            "Starting matrix control thread...".to_string(),
-        ))
-        .expect("Unable to send log from matrix thread!");
+    log::info!("Starting matrix control thread.");
 
     //// setup the matrix controller
     let mut controller = ControllerBuilder::new()
@@ -93,22 +82,16 @@ fn matrix_control(
         match controller.render() {
             Ok(_) => { /* do nothing */ }
             Err(_) => {
-                log_tx
-                    .send(Log::new(
-                        LogOrigin::MatrixControlThread,
-                        LogType::Warning,
-                        "Failed to render changes to matrix!".to_string(),
-                    ))
-                    .expect("Unable to send log from matrix thread!");
+                log::warn!("Failed to push plugin changes to matrix.");
             }
         }
     }
 
     // When the update channel closes, clear the LEDs
+    log::info!("Clearing matrix.");
     let leds = controller.leds_mut(0);
     for led in leds {
         *led = [0, 0, 0, 0];
     }
-    controller.render().expect("Unable to clear screen while quitting!")
-
+    controller.render().unwrap_or_else(|_| log::warn!("Failed to clear matrix on exit."));
 }
