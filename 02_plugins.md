@@ -124,9 +124,6 @@ If Matricks detects multiple plugins (i.e. a directory full of plugins), Matrick
 
 Matricks offers other configuration options, including FPS, simulation magnification, log directory, and more. For more information, run `matricks -h`.
 
-[^loopplan]: A feature to allow for one or more plugins to be cycled through infinitely is planned for v0.2.0.
-[^timerplan]: A feature to allow for Matricks to move onto the next plugin after a set amount of time has passed is planned for v0.2.0.
-
 # Adding Plugin Functionality
 
 ## Plugin State
