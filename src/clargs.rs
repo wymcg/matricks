@@ -5,11 +5,11 @@ use serde::{Deserialize, Serialize};
 #[command(author, version, about, long_about=None)]
 pub struct MatricksArgs {
     #[command(subcommand)]
-    pub config: FetchType,
+    pub config: MatricksSubcommand,
 }
 
 #[derive(Subcommand)]
-pub enum FetchType {
+pub enum MatricksSubcommand {
     /// Start Matricks using command line arguments
     Manual(MatrixConfigArgs),
 
@@ -30,16 +30,16 @@ pub enum FetchType {
 #[derive(Args, Clone)]
 pub struct ConfigurationFileReadInfo {
     /// Path to a .toml configuration file
-    #[arg(short, long)]
-    path: String,
+    #[arg(global = true)]
+    pub path: String,
 }
 
 /// Information needed to write a configuration file
 #[derive(Args, Clone)]
 pub struct ConfigurationFileWriteInfo {
     /// Location to write configuration file
-    #[arg(short, long)]
-    path: String,
+    #[arg(global = true)]
+    pub path: String,
 }
 
 #[derive(Args, Clone, Serialize, Deserialize)]

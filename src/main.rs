@@ -2,11 +2,12 @@ mod clargs;
 mod matrix_control_thread;
 mod plugin_iterator;
 
-use crate::clargs::{FetchType, MatricksArgs};
+use crate::clargs::{MatricksArgs, MatricksSubcommand};
 use crate::plugin_iterator::{PluginIterator, PluginIteratorError};
 use crate::matrix_control_thread::start_matrix_control;
 
 use std::ffi::OsStr;
+use std::fs;
 use std::path::Path;
 use std::str::from_utf8;
 use std::time::{Duration, Instant};
@@ -32,8 +33,65 @@ fn main() {
 
     // Pull config from command line argument
     let config = match args.config {
-        FetchType::Manual(config) => {config}
-        _ => {todo!("Not implemented!")}
+        MatricksSubcommand::Manual(config) => {
+            log::info!("Matrix configuration has been manually supplied.");
+            config
+        }
+        MatricksSubcommand::Auto(file_info) => {
+            // Read the file to a string
+            let matrix_config_string_toml = match fs::read_to_string(&file_info.path) {
+                Ok(string) => {string}
+                Err(e) => {
+                    log::error!("Failed to read config file at path \"{}\".", file_info.path);
+                    log::debug!("Received the following error while attempting to read file: {e:?}");
+                    log::info!("Quitting Matricks.");
+                    return;
+                }
+            };
+
+            match toml::from_str(&matrix_config_string_toml) {
+                Ok(config) => {
+                    log::info!("Matrix configuration has been supplied from a configuration file.");
+                    config
+                }
+                Err(e) => {
+                    log::error!("Failed to parse config file at path \"{}\".", file_info.path);
+                    log::debug!("Received the following error while attempting to parse file: {e:?}");
+                    log::info!("Quitting Matricks.");
+                    return;
+                }
+            }
+
+        }
+        MatricksSubcommand::Save {
+            info,
+            matrix_config,
+        } => {
+            // Serialize the matrix configuration to a string
+            let config_string_toml = match toml::to_string(&matrix_config) {
+                Ok(string) => {string}
+                Err(e) => {
+                    log::error!("Failed to serialize matrix configuration");
+                    log::debug!("Received the following error while attempting to serialize matrix configuration: {e:?}");
+                    log::info!("Quitting Matricks.");
+                    return;
+                }
+            };
+
+            match fs::write(&info.path, config_string_toml) {
+                Ok(_) => {
+                    log::info!("Successfully wrote matrix configuration to configuration file at path \"{}\"", info.path);
+                    log::info!("Quitting Matricks.");
+                    return;
+                }
+                Err(e) => {
+                    log::error!("Failed to write matrix configuration to configuration file at path \"{}\"", info.path);
+                    log::debug!("Received the following error while attempting to write matrix configuration to file: {e:?}");
+                    log::info!("Quitting Matricks.");
+                    return;
+                }
+            };
+        }
     };
 
     // Calculate the frame time from the FPS option
