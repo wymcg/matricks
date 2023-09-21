@@ -1,8 +1,8 @@
+use matricks_plugin::{MatrixConfiguration, PluginUpdate};
+use rs_ws281x::{ChannelBuilder, ControllerBuilder, StripType};
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
 use std::thread::JoinHandle;
-use matricks_plugin::{PluginUpdate, MatrixConfiguration};
-use rs_ws281x::{ChannelBuilder, ControllerBuilder, StripType};
 
 /// Start a new matrix control thread and return the join handle and a plugin update sender.
 ///
@@ -14,24 +14,21 @@ use rs_ws281x::{ChannelBuilder, ControllerBuilder, StripType};
 pub fn start_matrix_control(
     matrix_config: MatrixConfiguration,
 ) -> (JoinHandle<()>, Sender<PluginUpdate>) {
-    // make the plugin update channel
+    // Make the plugin update channel
     let (tx, rx) = channel::<PluginUpdate>();
 
-    // spawn a the matrix control thread
+    // Spawn a the matrix control thread
     let handle = thread::spawn(|| matrix_control(matrix_config, rx));
 
-    // return the matrix control thread handle and the plugin update transmit channel
+    // Return the matrix control thread handle and the plugin update transmit channel
     (handle, tx)
 }
 
 /// Matrix Control thread loop for real hardware (Raspberry Pi, etc.)
-fn matrix_control(
-    matrix_config: MatrixConfiguration,
-    update_rx: Receiver<PluginUpdate>,
-) {
+fn matrix_control(matrix_config: MatrixConfiguration, update_rx: Receiver<PluginUpdate>) {
     log::info!("Starting matrix control thread.");
 
-    //// setup the matrix controller
+    //// Setup the matrix controller
     let mut controller = ControllerBuilder::new()
         .freq(800_000)
         .dma(10)
@@ -47,9 +44,9 @@ fn matrix_control(
         .build()
         .expect("Unable to start the matrix controller!");
 
-    //// generate matrix coord to led strip index lookup table
+    //// Generate matrix coord to led strip index lookup table
 
-    // generate non-vertical, non-serpentine matrix map
+    // Generate non-vertical, non-serpentine matrix map
     let mut coord_to_strip_index: Vec<Vec<usize>> = vec![];
     for y in 0..matrix_config.height {
         coord_to_strip_index.push(vec![]);
@@ -59,7 +56,7 @@ fn matrix_control(
         }
     }
 
-    // if this is a serpentine matrix, flip every other row
+    // If this is a serpentine matrix, flip every other row
     if matrix_config.serpentine {
         for (y, row) in coord_to_strip_index.iter_mut().enumerate() {
             if y % 2 == 1 {
@@ -68,7 +65,7 @@ fn matrix_control(
         }
     }
 
-    //// handle matrix updates as they come
+    //// Handle matrix updates as they come
     for update in update_rx {
         {
             let leds = controller.leds_mut(0);
@@ -80,7 +77,7 @@ fn matrix_control(
         }
 
         match controller.render() {
-            Ok(_) => { /* do nothing */ }
+            Ok(_) => { /* Do nothing */ }
             Err(_) => {
                 log::warn!("Failed to push plugin changes to matrix.");
             }
@@ -93,5 +90,7 @@ fn matrix_control(
     for led in leds {
         *led = [0, 0, 0, 0];
     }
-    controller.render().unwrap_or_else(|_| log::warn!("Failed to clear matrix on exit."));
+    controller
+        .render()
+        .unwrap_or_else(|_| log::warn!("Failed to clear matrix on exit."));
 }

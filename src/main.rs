@@ -2,10 +2,10 @@ mod clargs;
 mod matrix_control_thread;
 mod plugin_iterator;
 
-use std::ffi::OsStr;
-use std::path::Path;
 use clargs::Args;
 use plugin_iterator::PluginIterator;
+use std::ffi::OsStr;
+use std::path::Path;
 use std::str::from_utf8;
 use std::time::{Duration, Instant};
 
@@ -27,13 +27,13 @@ fn main() {
     // Start the logger
     env_logger::init();
 
-    // make an initial version log
+    // Make an initial version log
     log::info!("Starting Matricks v{}.", VERSION.unwrap_or("unknown"));
 
-    // calculate the frame time from the fps option
+    // Calculate the frame time from the FPS option
     let target_frame_time_ms = Duration::from_nanos((1_000_000_000.0 / args.fps).round() as u64);
 
-    // make the matrix configuration string
+    // Make the matrix configuration string
     let mat_config = MatrixConfiguration {
         width: args.width,
         height: args.height,
@@ -51,12 +51,11 @@ fn main() {
         }
     };
 
-    // start the matrix control thread
+    // Start the matrix control thread
     log::info!("Starting the matrix control thread.");
-    let (matrix_control_handle, matrix_control_tx) =
-        start_matrix_control(mat_config);
+    let (matrix_control_handle, matrix_control_tx) = start_matrix_control(mat_config);
 
-    // the main loop, which is run infinitely if the loop command line flag is set
+    // The main loop, which is run infinitely if the loop command line flag is set
     'main_loop: loop {
         // make the plugin iterator
         let plugin_data_list = match PluginIterator::new(args.plugins.clone()) {
@@ -71,21 +70,21 @@ fn main() {
 
         ////// PLUGIN LOOP
         for plugin_result in plugin_data_list {
-            // check if the plugin data was successfully read
+            // Check if the plugin data was successfully read
             let (plugin_path, plugin_data) = match plugin_result {
                 Ok(data) => data,
                 Err(error) => {
                     match error {
                         PluginIteratorError::InvalidSeedPath(path) => {
-                            // the seed path is invalid, meaning that no plugins can be read.
-                            // this should never ever happen
+                            // The seed path is invalid, meaning that no plugins can be read.
+                            // This should never ever happen
                             log::error!("Could not read plugin data due to an invalid or missing path\"{path}\".");
                             log::info!("Quitting Matricks.");
                             return;
                         }
                         PluginIteratorError::InvalidPluginPath(path) => {
-                            // something went wrong with the path to the active plugin
-                            // we can't run this plugin, but we might be able to run others
+                            // Something went wrong with the path to the active plugin
+                            // We can't run this plugin, but we might be able to run others
                             log::error!("Could not read plugin data due to an invalid or missing path \"{path}\".");
                             log::warn!("This plugin will be skipped.");
                         }
@@ -101,10 +100,10 @@ fn main() {
                 .to_str()
                 .unwrap_or(&plugin_path);
 
-            // make a new context for the plugin
+            // Make a new context for the plugin
             let context = Context::new();
 
-            // make a new instance of the plugin
+            // Make a new instance of the plugin
             log::info!("Starting plugin \"{plugin_name}\".");
             let mut plugin = match Plugin::new(&context, plugin_data, [], true) {
                 Ok(plugin) => plugin,
@@ -116,7 +115,7 @@ fn main() {
                 }
             };
 
-            // call setup function of current active plugin
+            // Call setup function of current active plugin
             let _setup_result = match plugin.call("setup", &mat_config_string) {
                 Ok(result) => {
                     log::info!("Successfully set up plugin \"{plugin_name}\".");
@@ -129,34 +128,34 @@ fn main() {
                 }
             };
 
-            // mark the time when this plugin started its update loop
+            // Mark the time when this plugin started its update loop
             let plugin_start_time = Instant::now();
 
-            // setup the last frame time variable
+            // Setup the last frame time variable
             let mut last_frame_time = Instant::now();
 
-            // run an update every frame
+            // Run an update every frame
             'update_loop: loop {
-                // move on to the next plugin if the plugin time limit has been exceeded
+                // Move on to the next plugin if the plugin time limit has been exceeded
                 match args.time_limit {
-                    None => { /* there is no time limit, so do nothing */ }
+                    None => { /* There is no time limit, so do nothing */ }
                     Some(time_limit) => {
-                        // move on to the next plugin if this plugin has been running longer than the time limit
+                        // Move on to the next plugin if this plugin has been running longer than the time limit
                         if Instant::now() - plugin_start_time > Duration::from_secs(time_limit) {
                             break 'update_loop;
                         }
                     }
                 }
 
-                // call the update function if a frame has passed
+                // Call the update function if a frame has passed
                 if (Instant::now() - last_frame_time) >= target_frame_time_ms {
-                    // reset the last frame time
+                    // Reset the last frame time
                     last_frame_time = Instant::now();
 
-                    // call the update function
+                    // Call the update function
                     match plugin.call("update", "") {
                         Ok(json_result_utf8) => {
-                            // convert the result form utf8 to &str
+                            // Convert the result form utf8 to &str
                             let json_result_str = match from_utf8(json_result_utf8) {
                                 Ok(s) => s,
                                 Err(_) => {
@@ -166,17 +165,19 @@ fn main() {
                                 }
                             };
 
-                            // make a matrix state object from the string
+                            // Make a matrix state object from the string
                             let new_update = match from_str::<PluginUpdate>(json_result_str) {
                                 Ok(matrix_state) => matrix_state,
                                 Err(_) => {
-                                    log::warn!("Received malformed update from plugin \"{plugin_name}\"");
+                                    log::warn!(
+                                        "Received malformed update from plugin \"{plugin_name}\""
+                                    );
                                     log::warn!("This plugin will be skipped.");
                                     break 'update_loop;
                                 }
                             };
 
-                            // send matrix state to the matrix control thread
+                            // Send matrix state to the matrix control thread
                             match matrix_control_tx.send(new_update.clone()) {
                                 Ok(_) => { /* do nothing if it sent ok */ }
                                 Err(_) => {
@@ -185,26 +186,28 @@ fn main() {
                                 }
                             };
 
-                            // send plugin logs
+                            // Send plugin logs
                             match new_update.log_message {
-                                None => { /* plugin didn't send us anything, so don't do anything */
+                                None => { /* Plugin didn't send us anything, so don't do anything */
                                 }
                                 Some(logs) => {
                                     for log in logs {
-                                        // send a log message, identifying as the plugin
+                                        // Send a log message, identifying as the plugin
                                         log::info!("<{plugin_name}> {log}");
                                     }
                                 }
                             }
 
-                            // go to the next plugin if the plugin says it is done
+                            // Go to the next plugin if the plugin says it is done
                             if new_update.done {
                                 log::info!("Halting plugin \"{plugin_name}\" on plugin request.");
                                 break 'update_loop;
                             }
                         }
                         Err(e) => {
-                            log::error!("Unable to retrieve state update from plugin \"{plugin_name}\"");
+                            log::error!(
+                                "Unable to retrieve state update from plugin \"{plugin_name}\""
+                            );
                             log::debug!("Received the following error while retrieving state update from plugin: {e:?}");
                             log::warn!("This plugin will be skipped.");
                             break 'update_loop;
@@ -214,21 +217,21 @@ fn main() {
             }
         }
 
-        // break if the loop flag is not set
+        // Break if the loop flag is not set
         if !args.loop_plugins {
-            break 'main_loop
+            break 'main_loop;
         }
     }
 
     log::info!("Quitting Matricks.");
 
-    // close channels
+    // Close the connection to the matrix control thread, which allows the matrix control thread to stop
     drop(matrix_control_tx);
 
-    // join logging and matrix control threads
+    // Join logging and matrix control threads
     matrix_control_handle
         .join()
-        .unwrap_or_else(|_| {log::warn!("Unable to join matrix control thread.")});
+        .unwrap_or_else(|_| log::warn!("Unable to join matrix control thread."));
 
     log::info!("Done.");
 }
