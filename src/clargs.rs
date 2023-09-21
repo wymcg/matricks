@@ -11,7 +11,7 @@ pub struct MatricksArgs {
 #[derive(Subcommand)]
 pub enum MatricksSubcommand {
     /// Start Matricks using command line arguments
-    Manual(MatrixConfigArgs),
+    Manual(MatricksConfigArgs),
 
     /// Start Matricks using a configuration file
     Auto(ConfigurationFileReadInfo),
@@ -22,7 +22,7 @@ pub enum MatricksSubcommand {
         info: ConfigurationFileWriteInfo,
 
         #[command(flatten)]
-        matrix_config: MatrixConfigArgs,
+        matrix_config: MatricksConfigArgs,
     }
 }
 
@@ -43,7 +43,7 @@ pub struct ConfigurationFileWriteInfo {
 }
 
 #[derive(Args, Clone, Serialize, Deserialize)]
-pub struct MatrixConfigArgs {
+pub struct MatricksConfigArgs {
     /// Path to plugin or directory of plugins
     #[arg(short, long)]
     pub plugins: String,
