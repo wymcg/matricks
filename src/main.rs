@@ -1,5 +1,5 @@
 mod clargs;
-mod matrix_control_thread;
+mod matrix_control;
 mod plugin_iterator;
 mod matricks;
 

@@ -18,18 +18,16 @@ pub fn start_matrix_control(
     let (tx, rx) = channel::<PluginUpdate>();
 
     // Spawn a the matrix control thread
-    let handle = thread::spawn(|| matrix_control(matrix_config, rx));
+    let handle = thread::spawn(|| control(matrix_config, rx));
 
     // Return the matrix control thread handle and the plugin update transmit channel
     (handle, tx)
 }
 
-/// Matrix Control thread loop for real hardware (Raspberry Pi, etc.)
-fn matrix_control(matrix_config: MatrixConfiguration, update_rx: Receiver<PluginUpdate>) {
-    log::info!("Starting matrix control thread.");
+fn control(matrix_config: MatrixConfiguration, update_rx: Receiver<PluginUpdate>) {
 
     //// Setup the matrix controller
-    let mut controller = ControllerBuilder::new()
+    let mut controller = match ControllerBuilder::new()
         .freq(800_000)
         .dma(10)
         .channel(
@@ -41,12 +39,19 @@ fn matrix_control(matrix_config: MatrixConfiguration, update_rx: Receiver<Plugin
                 .brightness(matrix_config.brightness)
                 .build(),
         )
-        .build()
-        .expect("Unable to start the matrix controller!");
+        .build() {
+        Ok(controller) => {controller}
+        Err(e) => {
+            log::error!("Failed to start matrix controller");
+            log::debug!("See error: {e:?}");
+            log::info!("Stopping the matrix control loop.");
+            return;
+        }
+    };
 
     //// Generate matrix coord to led strip index lookup table
 
-    // Generate non-vertical, non-serpentine matrix map
+    // Generate normal matrix map
     let mut coord_to_strip_index: Vec<Vec<usize>> = vec![];
     for y in 0..matrix_config.height {
         coord_to_strip_index.push(vec![]);

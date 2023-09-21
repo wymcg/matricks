@@ -1,6 +1,6 @@
 use crate::clargs::MatrixConfigArgs;
 use crate::plugin_iterator::{PluginIterator, PluginIteratorError};
-use crate::matrix_control_thread::start_matrix_control;
+use crate::matrix_control::start_matrix_control;
 
 use std::ffi::OsStr;
 use std::path::Path;
