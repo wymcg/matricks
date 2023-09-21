@@ -2,15 +2,15 @@ mod clargs;
 mod matrix_control_thread;
 mod plugin_iterator;
 
-use clargs::Args;
-use plugin_iterator::PluginIterator;
+use crate::clargs::{FetchType, MatricksArgs};
+use crate::plugin_iterator::{PluginIterator, PluginIteratorError};
+use crate::matrix_control_thread::start_matrix_control;
+
 use std::ffi::OsStr;
 use std::path::Path;
 use std::str::from_utf8;
 use std::time::{Duration, Instant};
 
-use crate::matrix_control_thread::start_matrix_control;
-use crate::plugin_iterator::PluginIteratorError;
 use clap::Parser;
 use extism::{Context, Plugin};
 use matricks_plugin::{MatrixConfiguration, PluginUpdate};
@@ -22,7 +22,7 @@ fn main() {
     ////// SETUP
 
     // parse command line arguments
-    let args = Args::parse();
+    let args = MatricksArgs::parse();
 
     // Start the logger
     env_logger::init();
@@ -30,16 +30,22 @@ fn main() {
     // Make an initial version log
     log::info!("Starting Matricks v{}.", VERSION.unwrap_or("unknown"));
 
+    // Pull config from command line argument
+    let config = match args.config {
+        FetchType::Manual(config) => {config}
+        _ => {todo!("Not implemented!")}
+    };
+
     // Calculate the frame time from the FPS option
-    let target_frame_time_ms = Duration::from_nanos((1_000_000_000.0 / args.fps).round() as u64);
+    let target_frame_time_ms = Duration::from_nanos((1_000_000_000.0 / config.fps).round() as u64);
 
     // Make the matrix configuration string
     let mat_config = MatrixConfiguration {
-        width: args.width,
-        height: args.height,
-        target_fps: args.fps,
-        serpentine: args.serpentine,
-        brightness: args.brightness,
+        width: config.width,
+        height: config.height,
+        target_fps: config.fps,
+        serpentine: config.serpentine,
+        brightness: config.brightness,
         ..Default::default()
     };
     let mat_config_string = match serde_json::to_string(&mat_config) {
@@ -58,7 +64,7 @@ fn main() {
     // The main loop, which is run infinitely if the loop command line flag is set
     'main_loop: loop {
         // make the plugin iterator
-        let plugin_data_list = match PluginIterator::new(args.plugins.clone()) {
+        let plugin_data_list = match PluginIterator::new(config.plugins.clone()) {
             Ok(plugin_iterator) => plugin_iterator,
             Err(e) => {
                 log::error!("Failed to instantiate plugin list.");
@@ -137,7 +143,7 @@ fn main() {
             // Run an update every frame
             'update_loop: loop {
                 // Move on to the next plugin if the plugin time limit has been exceeded
-                match args.time_limit {
+                match config.time_limit {
                     None => { /* There is no time limit, so do nothing */ }
                     Some(time_limit) => {
                         // Move on to the next plugin if this plugin has been running longer than the time limit
@@ -218,7 +224,7 @@ fn main() {
         }
 
         // Break if the loop flag is not set
-        if !args.loop_plugins {
+        if !config.loop_plugins {
             break 'main_loop;
         }
     }
