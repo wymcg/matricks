@@ -1203,11 +1203,10 @@ dependencies = [
 
 [[package]]
 name = "log"
-version = "0.4.17"
+version = "0.4.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "abb12e687cfb44aa40f41fc3978ef76448f9b6038cad6aef4259d3c095a2382e"
+checksum = "b5e6163cb8c49088c2c36f57875e58ccd8c87c7427f7fbd50ea6710b2f3f2e8f"
 dependencies = [
- "cfg-if",
  "serde",
 ]
 
@@ -1254,11 +1253,13 @@ dependencies = [
 
 [[package]]
 name = "matricks"
-version = "0.2.0"
+version = "0.2.2-alpha.1"
 dependencies = [
  "clap 4.2.3",
+ "env_logger",
  "extism",
  "glob",
+ "log",
  "matricks_plugin",
  "regex",
  "rs_ws281x",
