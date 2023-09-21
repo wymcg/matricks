@@ -12,9 +12,7 @@ use clap::Parser;
 const VERSION: Option<&str> = option_env!("CARGO_PKG_VERSION");
 
 fn main() {
-    ////// SETUP
-
-    // parse command line arguments
+    // Parse command line arguments
     let args = MatricksArgs::parse();
 
     // Start the logger
