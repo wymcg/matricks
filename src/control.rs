@@ -1,8 +1,13 @@
 use matricks_plugin::{MatrixConfiguration, PluginUpdate};
-use rs_ws281x::{ChannelBuilder, ControllerBuilder, StripType};
+use rs_ws281x::{ChannelBuilder, Controller, ControllerBuilder, StripType, WS2811Error};
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
 use std::thread::JoinHandle;
+
+const LED_SIGNAL_FREQUENCY: u32 = 800_000; // 800kHz
+const LED_DMA_CHANNEL: i32 = 10;
+const LED_GPIO_PIN: i32 = 10;
+
 
 /// Start a new matrix control thread and return the join handle and a plugin update sender.
 ///
@@ -27,19 +32,7 @@ pub fn start_matrix_control(
 fn matrix_controller(matrix_config: MatrixConfiguration, update_rx: Receiver<PluginUpdate>) {
 
     //// Setup the matrix controller
-    let mut controller = match ControllerBuilder::new()
-        .freq(800_000)
-        .dma(10)
-        .channel(
-            0, // channel index
-            ChannelBuilder::new()
-                .pin(10)
-                .count((matrix_config.width * matrix_config.height) as i32)
-                .strip_type(StripType::Ws2812)
-                .brightness(matrix_config.brightness)
-                .build(),
-        )
-        .build() {
+    let mut controller = match make_led_controller(matrix_config.width as i32, matrix_config.height as i32, matrix_config.brightness) {
         Ok(controller) => {controller}
         Err(e) => {
             log::error!("Failed to start matrix controller");
@@ -98,4 +91,20 @@ fn matrix_controller(matrix_config: MatrixConfiguration, update_rx: Receiver<Plu
     controller
         .render()
         .unwrap_or_else(|_| log::warn!("Failed to clear matrix on exit."));
+}
+
+fn make_led_controller(width: i32, height: i32, brightness: u8) -> Result<Controller, WS2811Error> {
+    ControllerBuilder::new()
+        .freq(LED_SIGNAL_FREQUENCY)
+        .dma(LED_DMA_CHANNEL)
+        .channel(
+            0, // channel index
+            ChannelBuilder::new()
+                .pin(LED_GPIO_PIN)
+                .count(width * height)
+                .strip_type(StripType::Ws2812)
+                .brightness(brightness)
+                .build(),
+        )
+        .build()
 }
