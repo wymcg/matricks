@@ -88,7 +88,7 @@ fn matrix_controller(matrix_config: MatrixConfiguration, update_rx: Receiver<Plu
         .unwrap_or_else(|_| log::warn!("Failed to clear matrix on exit."));
 }
 
-fn clear_matrix(led_controller: &mut Controller) -> Result<(), WS2811Error> {
+pub fn clear_matrix(led_controller: &mut Controller) -> Result<(), WS2811Error> {
     let leds = led_controller.leds_mut(0);
     for led in leds {
         *led = [0, 0, 0, 0];
@@ -96,7 +96,7 @@ fn clear_matrix(led_controller: &mut Controller) -> Result<(), WS2811Error> {
     led_controller.render()
 }
 
-fn make_led_controller(width: i32, height: i32, brightness: u8) -> Result<Controller, WS2811Error> {
+pub fn make_led_controller(width: i32, height: i32, brightness: u8) -> Result<Controller, WS2811Error> {
     ControllerBuilder::new()
         .freq(LED_SIGNAL_FREQUENCY)
         .dma(LED_DMA_CHANNEL)

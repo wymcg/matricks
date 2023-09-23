@@ -23,7 +23,10 @@ pub enum MatricksSubcommand {
 
         #[command(flatten)]
         matrix_config: MatricksConfigArgs,
-    }
+    },
+
+    /// Clear the matrix
+    Clear,
 }
 
 /// Information needed to read a configuration file
@@ -31,7 +34,7 @@ pub enum MatricksSubcommand {
 pub struct ConfigurationFileReadInfo {
     /// Path to a .toml configuration file
     #[arg(global = true)]
-    pub path: String,
+    pub config_path: String,
 }
 
 /// Information needed to write a configuration file
@@ -39,15 +42,11 @@ pub struct ConfigurationFileReadInfo {
 pub struct ConfigurationFileWriteInfo {
     /// Location to write configuration file
     #[arg(global = true)]
-    pub path: String,
+    pub config_path: String,
 }
 
-#[derive(Args, Clone, Serialize, Deserialize)]
-pub struct MatricksConfigArgs {
-    /// Path to plugin or directory of plugins
-    #[arg(short, long)]
-    pub plugins: String,
-
+#[derive(Serialize, Deserialize, Args, Clone)]
+pub struct MatrixConfigurationArgs {
     /// Width of the matrix, in number of LEDs
     #[arg(short = 'x', long)]
     pub width: usize,
@@ -60,10 +59,6 @@ pub struct MatricksConfigArgs {
     #[arg(short, long, default_value = "30")]
     pub fps: f32,
 
-    /// Directory to write logs
-    #[arg(short = 'L', long = "log", default_value = "log")]
-    pub log_dir: String,
-
     /// Data line alternates direction between columns or rows
     #[arg(short, long, default_value = "false")]
     pub serpentine: bool,
@@ -72,6 +67,15 @@ pub struct MatricksConfigArgs {
     #[arg(short, long, default_value = "255")]
     pub brightness: u8,
 
+}
+
+
+#[derive(Serialize, Deserialize, Args, Clone)]
+pub struct PluginConfigurationArgs {
+    /// Path to plugin or directory of plugins
+    #[arg(short, long)]
+    pub path: String,
+
     /// Maximum time (in seconds) that a single plugin can run before moving on to the next one. No time limit by default.
     #[arg(short, long)]
     pub time_limit: Option<u64>,
@@ -79,4 +83,13 @@ pub struct MatricksConfigArgs {
     /// Loop plugin or set of plugins indefinitely
     #[arg(short = 'l', long = "loop", default_value = "false")]
     pub loop_plugins: bool,
+}
+
+#[derive(Args, Clone, Serialize, Deserialize)]
+pub struct MatricksConfigArgs {
+    #[command(flatten)]
+    pub matrix: MatrixConfigurationArgs,
+
+    #[command(flatten)]
+    pub plugin: PluginConfigurationArgs,
 }
