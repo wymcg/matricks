@@ -7,7 +7,8 @@ use std::path::Path;
 use std::str::from_utf8;
 use std::time::{Duration, Instant};
 
-use extism::{Context, Plugin};
+use extism::{Context, Manifest, Plugin};
+use extism::manifest::Wasm;
 use matricks_plugin::{MatrixConfiguration, PluginUpdate};
 use serde_json::from_str;
 
@@ -91,9 +92,12 @@ pub fn matricks_core(config: MatricksConfigArgs) {
             // Make a new context for the plugin
             let context = Context::new();
 
+            // Make a new manifest for the plugin
+            let manifest = Manifest::new([Wasm::data(plugin_data)]);
+
             // Make a new instance of the plugin
             log::info!("Starting plugin \"{plugin_name}\".");
-            let mut plugin = match Plugin::new(&context, plugin_data, [], true) {
+            let mut plugin = match Plugin::new_with_manifest(&context, &manifest, [], true) {
                 Ok(plugin) => plugin,
                 Err(e) => {
                     log::error!("Unable to instantiate plugin \"{plugin_name}\".");

@@ -1,6 +1,6 @@
 [package]
 name = "matricks"
-version = "0.2.2-alpha.3"
+version = "0.2.2-alpha.4"
 edition = "2021"
 authors = ["Will McGloughlin <willem.mcg@gmail.com>"]
 license = "MIT"
@@ -18,7 +18,7 @@ categories = ["command-line-utilities"]
 clap = { version = "4.4.4", features = ["derive"] }
 regex = "1.9.5"
 glob = "0.3.1"
-extism = "0.3.0"
+extism = "0.5.2"
 serde = "1.0.188"
 serde_json = "1.0.107"
 toml = "0.8.0"
