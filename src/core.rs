@@ -19,15 +19,15 @@ use serde_json::from_str;
 ///
 pub fn matricks_core(config: MatricksConfigArgs) {
     // Calculate the frame time from the FPS option
-    let target_frame_time_ms = Duration::from_nanos((1_000_000_000.0 / config.fps).round() as u64);
+    let target_frame_time_ms = Duration::from_nanos((1_000_000_000.0 / config.matrix.fps).round() as u64);
 
     // Make the matrix configuration string
     let mat_config = MatrixConfiguration {
-        width: config.width,
-        height: config.height,
-        target_fps: config.fps,
-        serpentine: config.serpentine,
-        brightness: config.brightness,
+        width: config.matrix.width,
+        height: config.matrix.height,
+        target_fps: config.matrix.fps,
+        serpentine: config.matrix.serpentine,
+        brightness: config.matrix.brightness,
         ..Default::default()
     };
     let mat_config_string = match serde_json::to_string(&mat_config) {
@@ -46,7 +46,7 @@ pub fn matricks_core(config: MatricksConfigArgs) {
     // The main loop, which is run infinitely if the loop command line flag is set
     'main_loop: loop {
         // make the plugin iterator
-        let plugin_data_list = match PluginIterator::new(config.plugins.clone()) {
+        let plugin_data_list = match PluginIterator::new(config.plugin.path.clone()) {
             Ok(plugin_iterator) => plugin_iterator,
             Err(e) => {
                 log::error!("Failed to instantiate plugin list.");
@@ -125,7 +125,7 @@ pub fn matricks_core(config: MatricksConfigArgs) {
             // Run an update every frame
             'update_loop: loop {
                 // Move on to the next plugin if the plugin time limit has been exceeded
-                match config.time_limit {
+                match config.plugin.time_limit {
                     None => { /* There is no time limit, so do nothing */ }
                     Some(time_limit) => {
                         // Move on to the next plugin if this plugin has been running longer than the time limit
@@ -206,7 +206,7 @@ pub fn matricks_core(config: MatricksConfigArgs) {
         }
 
         // Break if the loop flag is not set
-        if !config.loop_plugins {
+        if !config.plugin.loop_plugins {
             break 'main_loop;
         }
     }

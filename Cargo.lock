@@ -1272,7 +1272,7 @@ dependencies = [
 
 [[package]]
 name = "matricks"
-version = "0.2.2-alpha.2"
+version = "0.2.2-alpha.3"
 dependencies = [
  "clap 4.4.4",
  "env_logger",
