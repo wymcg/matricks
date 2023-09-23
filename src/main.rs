@@ -8,7 +8,7 @@ use crate::core::matricks_core;
 
 use std::fs;
 use clap::Parser;
-use crate::control::make_led_controller;
+use crate::control::{clear_matrix, make_led_controller};
 
 const VERSION: Option<&str> = option_env!("CARGO_PKG_VERSION");
 
@@ -92,11 +92,32 @@ fn main() {
                 }
             };
         }
-        MatricksSubcommand::Clear => {
+        MatricksSubcommand::Clear(matrix_config) => {
             log::info!("Clearing the matrix.");
 
-            todo!("Clear the matrix here");
+            // Make an LED controller
+            let mut controller = match make_led_controller(matrix_config.width as i32, matrix_config.height as i32, matrix_config.brightness) {
+                Ok(c) => { c }
+                Err(e) => {
+                    log::error!("Failed to create LED controller.");
+                    log::debug!("Received the following error while attempting to create LED controller: {e:?}");
+                    log::info!("Quitting Matricks.");
+                    return;
+                }
+            };
+
+            // Clear the matrix using the controller we just made
+            match clear_matrix(&mut controller) {
+                Ok(_) => {
+                    log::info!("Successfully cleared matrix.");
+                    log::info!("Quitting Matricks.");
+                }
+                Err(e) => {
+                    log::error!("Failed to clear matrix.");
+                    log::debug!("Received the following error while clear matrix: {e:?}");
+                    log::info!("Quitting Matricks.");
+                }
+            }
         }
     };
-
 }

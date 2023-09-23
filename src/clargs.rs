@@ -26,7 +26,7 @@ pub enum MatricksSubcommand {
     },
 
     /// Clear the matrix
-    Clear,
+    Clear(MatrixConfigurationArgs),
 }
 
 /// Information needed to read a configuration file
