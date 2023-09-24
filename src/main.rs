@@ -2,6 +2,7 @@ mod clargs;
 mod control;
 mod plugin_iterator;
 mod core;
+mod path_map;
 
 use crate::clargs::{MatricksArgs, MatricksSubcommand};
 use crate::core::matricks_core;

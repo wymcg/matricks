@@ -88,7 +88,7 @@ pub struct PluginConfigurationArgs {
     pub allow_host: Option<Vec<String>>,
 
     #[arg(long)]
-    pub allow_path: Option<Vec<String>>,
+    pub map_path: Option<Vec<String>>,
 }
 
 #[derive(Args, Clone, Serialize, Deserialize)]
