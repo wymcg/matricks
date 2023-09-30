@@ -34,7 +34,9 @@ For a list of plugins to try, there are several example plugins listed in the [e
 You may manually provide a configuration to Matricks using `matricks manual`.
 To run a plugin (or a set of plugins in a directory), Matricks can be invoked as follows:
 
-> ```matricks manual [OPTIONS] --path <PLUGIN_PATH> --width <WIDTH> --height <HEIGHT>```
+```
+matricks manual [OPTIONS] --path <PLUGIN_PATH> --width <WIDTH> --height <HEIGHT>
+```
 
 This will run the plugin(s) at the given path on the connected matrix.
 Other matrix and plugin configuration options are also available; See `matricks help manual` for more information.
@@ -43,7 +45,9 @@ Other matrix and plugin configuration options are also available; See `matricks 
 Once you have confirmed that everything is working with `matricks manual`, you can save your configuration to a file using the `matricks save` command.
 To save your configuration, Matricks can be invoked as follows:
 
-> ```matricks save <NEW_CONFIG_PATH> [OPTIONS] --path <PLUGIN_PATH> --width <WIDTH> --height <HEIGHT>```
+```
+matricks save <NEW_CONFIG_PATH> [OPTIONS] --path <PLUGIN_PATH> --width <WIDTH> --height <HEIGHT>
+```
 
 This is similar to `matricks manual`, but instead of running the plugin, Matricks will save the configuration information to a new TOML file at the given path.
 `matricks save` has the same matrix and plugin configuration options as `matricks manual`. 
@@ -53,7 +57,9 @@ See `matricks help save` for more information.
 If you have a TOML configuration file (created either by hand or by running `matricks save`), you can use it using `matricks auto`.
 To run Matricks with a configuration file, Matricks can be invoked as follows:
 
-> ```matricks auto <CONFIG_PATH>```
+```
+matricks auto <CONFIG_PATH>
+```
 
 This command will use the configuration information in the given file to drive the matrix.
 See `matricks help auto` for more information.
@@ -61,7 +67,9 @@ See `matricks help auto` for more information.
 ### Clearing the matrix
 If for any reason you need to clear all LEDs on the matrix, Matricks can be invoked as follows:
 
-> ```matricks clear --width <WIDTH> --height <HEIGHT>```
+```
+matricks clear --width <WIDTH> --height <HEIGHT>
+```
 
 See `matricks help clear` for more information.
 
