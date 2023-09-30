@@ -26,6 +26,16 @@ To simulate plugins while you're developing them, check out [Simtricks](https://
   - Install and configure the [rpi_ws281x library](https://github.com/rpi-ws281x/rpi_ws281x).
   - Run the executable
 
+## Use a pre-compiled binary
+For convenience, pre-compiled binaries are available in the [releases](https://github.com/wymcg/matricks/releases) tab.
+To download and run a precompiled binary on your Raspberry Pi, you can run the following commands:
+```
+MATRICKS_VERSION=0.2.1 && \
+wget https://github.com/wymcg/matricks/releases/latest/download/matricks_$MATRICKS_VERSION && \ 
+chmod +x matricks_$MATRICKS_VERSION && \
+./matricks_$MATRICKS_VERSION 
+```
+
 ## Usage
 This section describes basic usage of Matricks. For general usage information, run `matricks help`.
 For a list of plugins to try, there are several example plugins listed in the [examples README](./examples/README.md).
