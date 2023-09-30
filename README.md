@@ -7,25 +7,6 @@ LED matrix functionality is defined by user-developed plugins, or "tricks", whic
 is supported by the [Extism PDK](https://extism.org/docs/category/write-a-plug-in). 
 To simulate plugins while you're developing them, check out [Simtricks](https://github.com/wymcg/simtricks)!
 
-See usage details below:
-
-```
-Usage: matricks [OPTIONS] --plugins <PLUGINS> --width <WIDTH> --height <HEIGHT>
-
-Options:
-  -p, --plugins <PLUGINS>              Path to plugin or directory of plugins
-  -x, --width <WIDTH>                  Width of the matrix, in number of LEDs
-  -y, --height <HEIGHT>                Height of the matrix, in number of LEDs
-  -f, --fps <FPS>                      Target framerate at which to drive the matrix [default: 30]
-  -L, --log <LOG_DIR>                  Directory to write logs [default: log]
-  -s, --serpentine                     Data line alternates direction between columns or rows
-  -b, --brightness <BRIGHTNESS>        Brightness of matrix, from 0-255 [default: 255]
-  -t, --time-limit <TIME_LIMIT>        Maximum time (in seconds) that a single plugin can run before moving on to the next one. No time limit by default
-  -l, --loop                           Loop plugin or set of plugins indefinitely
-  -h, --help                           Print help
-  -V, --version                        Print version
-```
-
 ## Installation on Raspberry Pi
 - Install 64-bit Raspbian[^1] on your Raspberry Pi[^2]
 - Install Rust and Cargo from [the Rust website](https://rustup.rs)
@@ -44,6 +25,45 @@ Options:
   - Install 64-bit Raspbian[^1]
   - Install and configure the [rpi_ws281x library](https://github.com/rpi-ws281x/rpi_ws281x).
   - Run the executable
+
+## Usage
+This section describes basic usage of Matricks. For general usage information, run `matricks help`.
+For a list of plugins to try, there are several example plugins listed in the [examples README](./examples/README.md).
+
+### Manual configuration
+You may manually provide a configuration to Matricks using `matricks manual`.
+To run a plugin (or a set of plugins in a directory), Matricks can be invoked as follows:
+
+> ```matricks manual [OPTIONS] --path <PLUGIN_PATH> --width <WIDTH> --height <HEIGHT>```
+
+This will run the plugin(s) at the given path on the connected matrix.
+Other matrix and plugin configuration options are also available; See `matricks help manual` for more information.
+
+### Saving a configuration
+Once you have confirmed that everything is working with `matricks manual`, you can save your configuration to a file using the `matricks save` command.
+To save your configuration, Matricks can be invoked as follows:
+
+> ```matricks save <NEW_CONFIG_PATH> [OPTIONS] --path <PLUGIN_PATH> --width <WIDTH> --height <HEIGHT>```
+
+This is similar to `matricks manual`, but instead of running the plugin, Matricks will save the configuration information to a new TOML file at the given path.
+`matricks save` has the same matrix and plugin configuration options as `matricks manual`. 
+See `matricks help save` for more information.
+
+### Automatic configuration
+If you have a TOML configuration file (created either by hand or by running `matricks save`), you can use it using `matricks auto`.
+To run Matricks with a configuration file, Matricks can be invoked as follows:
+
+> ```matricks auto <CONFIG_PATH>```
+
+This command will use the configuration information in the given file to drive the matrix.
+See `matricks help auto` for more information.
+
+### Clearing the matrix
+If for any reason you need to clear all LEDs on the matrix, Matricks can be invoked as follows:
+
+> ```matricks clear --width <WIDTH> --height <HEIGHT>```
+
+See `matricks help clear` for more information.
 
 [^1]: At this time, Matricks can only be installed and run on 64-bit operating systems.
 [^2]: If you are using a Raspberry Pi with less than 1GB of RAM, installation using this method is not recommended.
