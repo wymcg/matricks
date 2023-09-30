@@ -36,8 +36,9 @@ Options:
 ## Cross-compilation for Raspberry Pi
 - On another device,
   - Install Rust and Cargo from [the Rust website](https://rustup.rs)
-  - Run `rustup target add aarch64-unknown-linux-gnu`
-  - Clone this repository and build with `cargo build --release`[^3]
+  - Run `rustup target add aarch64-unknown-linux-musl`
+  - Run `cargo install cross`
+  - Clone this repository and build with `cross build --release --target aarch64-unknown-linux-musl`
   - Transfer the produced executable to your Raspberry Pi
 - On your Raspberry Pi,
   - Install 64-bit Raspbian[^1]
@@ -46,4 +47,3 @@ Options:
 
 [^1]: At this time, Matricks can only be installed and run on 64-bit operating systems.
 [^2]: If you are using a Raspberry Pi with less than 1GB of RAM, installation using this method is not recommended.
-[^3]: No need for a `--target` flag here, Matricks is set up to build for Raspberry Pi by default.
