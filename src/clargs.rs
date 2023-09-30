@@ -1,12 +1,52 @@
-use clap::Parser;
+use clap::{Args, Parser, Subcommand};
+use serde::{Deserialize, Serialize};
 
-#[derive(Parser, Debug)]
+#[derive(Parser)]
 #[command(author, version, about, long_about=None)]
-pub struct Args {
-    /// Path to plugin or directory of plugins
-    #[arg(short, long)]
-    pub plugins: String,
+pub struct MatricksArgs {
+    #[command(subcommand)]
+    pub config: MatricksSubcommand,
+}
 
+#[derive(Subcommand)]
+pub enum MatricksSubcommand {
+    /// Start Matricks using command line arguments
+    Manual(MatricksConfigArgs),
+
+    /// Start Matricks using a configuration file
+    Auto(ConfigurationFileReadInfo),
+
+    /// Save a command line configuration to a .toml configuration file
+    Save {
+        #[command(flatten)]
+        info: ConfigurationFileWriteInfo,
+
+        #[command(flatten)]
+        matrix_config: MatricksConfigArgs,
+    },
+
+    /// Clear the matrix
+    Clear(MatrixConfigurationArgs),
+}
+
+/// Information needed to read a configuration file
+#[derive(Args, Clone)]
+pub struct ConfigurationFileReadInfo {
+    /// Path to a .toml configuration file
+    #[arg(global = true)]
+    pub config_path: String,
+}
+
+/// Information needed to write a configuration file
+#[derive(Args, Clone)]
+pub struct ConfigurationFileWriteInfo {
+    /// Location to write configuration file
+    #[arg(global = true)]
+    pub config_path: String,
+}
+
+#[derive(Serialize, Deserialize, Args, Clone)]
+pub struct MatrixConfigurationArgs {
     /// Width of the matrix, in number of LEDs
     #[arg(short = 'x', long)]
     pub width: usize,
@@ -19,10 +59,6 @@ pub struct Args {
     #[arg(short, long, default_value = "30")]
     pub fps: f32,
 
-    /// Directory to write logs
-    #[arg(short = 'L', long = "log", default_value = "log")]
-    pub log_dir: String,
-
     /// Data line alternates direction between columns or rows
     #[arg(short, long, default_value = "false")]
     pub serpentine: bool,
@@ -31,6 +67,15 @@ pub struct Args {
     #[arg(short, long, default_value = "255")]
     pub brightness: u8,
 
+}
+
+
+#[derive(Serialize, Deserialize, Args, Clone)]
+pub struct PluginConfigurationArgs {
+    /// Path to plugin or directory of plugins
+    #[arg(short, long)]
+    pub path: String,
+
     /// Maximum time (in seconds) that a single plugin can run before moving on to the next one. No time limit by default.
     #[arg(short, long)]
     pub time_limit: Option<u64>,
@@ -38,4 +83,19 @@ pub struct Args {
     /// Loop plugin or set of plugins indefinitely
     #[arg(short = 'l', long = "loop", default_value = "false")]
     pub loop_plugins: bool,
+
+    #[arg(long)]
+    pub allow_host: Option<Vec<String>>,
+
+    #[arg(long)]
+    pub map_path: Option<Vec<String>>,
+}
+
+#[derive(Args, Clone, Serialize, Deserialize)]
+pub struct MatricksConfigArgs {
+    #[command(flatten)]
+    pub matrix: MatrixConfigurationArgs,
+
+    #[command(flatten)]
+    pub plugin: PluginConfigurationArgs,
 }

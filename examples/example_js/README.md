@@ -1,6 +1,6 @@
 # JavaScript Example Trick
 This is a simple example Matricks plugin that will fade from black to white, before halting and sending a log.
-**At this time, the only Mac and Linux are supported for plugin compilation.**
+**At this time, the only Mac and Linux are supported for Javascript plugin compilation.**
 
 ## Build
 - Download the compiler install script with `curl -O https://raw.githubusercontent.com/extism/js-pdk/main/install.sh`
