@@ -16,7 +16,7 @@ categories = ["command-line-utilities"]
 
 [dependencies]
 clap = { version = "4.2.1", features = ["derive"] }
-regex = "1.7.3"
+regex = "1.9.4"
 glob = "0.3.1"
 extism = "0.3.0"
 serde = "1.0.159"
