@@ -7,9 +7,11 @@ use std::path::Path;
 use std::str::from_utf8;
 use std::time::{Duration, Instant};
 
-use extism::{Context, Plugin};
+use extism::{Context, Manifest, Plugin};
+use extism::manifest::Wasm;
 use matricks_plugin::{MatrixConfiguration, PluginUpdate};
 use serde_json::from_str;
+use crate::path_map::PathMap;
 
 /// Core Matricks functionality
 ///
@@ -20,6 +22,25 @@ use serde_json::from_str;
 pub fn matricks_core(config: MatricksConfigArgs) {
     // Calculate the frame time from the FPS option
     let target_frame_time_ms = Duration::from_nanos((1_000_000_000.0 / config.matrix.fps).round() as u64);
+
+    // Process user-supplied path mappings
+    let mut path_mappings: Vec<PathMap> = vec![];
+    match config.plugin.map_path {
+        None => { /* Do nothing */ }
+        Some(path_map_strings) => {
+            for path_map_string in path_map_strings {
+                match PathMap::from_string(path_map_string.clone()) {
+                    Ok(path_map) => {
+                        log::info!("Mapping local filesystem path \"{}\" to plugin filesystem path \"{}\"", path_map.from, path_map.to);
+                        path_mappings.push(path_map);
+                    }
+                    Err(_) => {
+                        log::warn!("Unable to process path mapping \"{path_map_string}\". This mapping will be ignored.");
+                    }
+                };
+            }
+        }
+    }
 
     // Make the matrix configuration string
     let mat_config = MatrixConfiguration {
@@ -91,9 +112,25 @@ pub fn matricks_core(config: MatricksConfigArgs) {
             // Make a new context for the plugin
             let context = Context::new();
 
+            // Make a new manifest for the plugin
+            let mut manifest = Manifest::new([Wasm::data(plugin_data)]);
+
+            // Add the allowed hosts to the manifest
+            for host in config.plugin.allow_host.clone().unwrap_or(vec![]) {
+                log::debug!("Adding host \"{host}\" to the manifest.");
+                manifest = manifest.with_allowed_host(host);
+            }
+
+            // Add the path mappings to the manifest
+            for path_map in path_mappings.clone() {
+                log::debug!("Adding mapping from \"{}\" to \"{}\" to the manifest.", path_map.from, path_map.to);
+                manifest = manifest.with_allowed_path(path_map.from, path_map.to);
+            }
+
+
             // Make a new instance of the plugin
             log::info!("Starting plugin \"{plugin_name}\".");
-            let mut plugin = match Plugin::new(&context, plugin_data, [], true) {
+            let mut plugin = match Plugin::new_with_manifest(&context, &manifest, [], true) {
                 Ok(plugin) => plugin,
                 Err(e) => {
                     log::error!("Unable to instantiate plugin \"{plugin_name}\".");

@@ -83,6 +83,12 @@ pub struct PluginConfigurationArgs {
     /// Loop plugin or set of plugins indefinitely
     #[arg(short = 'l', long = "loop", default_value = "false")]
     pub loop_plugins: bool,
+
+    #[arg(long)]
+    pub allow_host: Option<Vec<String>>,
+
+    #[arg(long)]
+    pub map_path: Option<Vec<String>>,
 }
 
 #[derive(Args, Clone, Serialize, Deserialize)]
