@@ -49,4 +49,11 @@ If for any reason you need to clear all LEDs on the matrix, Matricks can be invo
 matricks clear --width <WIDTH> --height <HEIGHT>
 ```
 
+### View Logs
+To see logs from Matricks, prepend your command with `RUST_LOG=matricks=info`. 
+For example:
+```
+RUST_LOG=matricks=info matricks auto your_config.toml
+```
+
 See `matricks help clear` for more information.
