@@ -4,7 +4,6 @@ title: Installation
 permalink: /install/
 ---
 
-## Matricks
 Matricks is intended only to be run on Raspberry Pi devices, and can be installed using Cargo after installing a few dependencies.
 To run plugins on non-Raspberry Pi devices, check out [Simtricks](https://github.com/wymcg/simtricks).
 
