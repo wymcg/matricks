@@ -83,5 +83,12 @@ matricks clear --width <WIDTH> --height <HEIGHT>
 
 See `matricks help clear` for more information.
 
+### View Logs
+To see logs from Matricks, prepend your command with `RUST_LOG=matricks=info`.
+For example:
+```
+RUST_LOG=matricks=info matricks auto your_config.toml
+```
+
 [^1]: At this time, Matricks can only be installed and run on 64-bit operating systems.
 [^2]: If you are using a Raspberry Pi with less than 1GB of RAM, installation using this method is not recommended.
