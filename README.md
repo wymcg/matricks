@@ -30,7 +30,7 @@ To simulate plugins while you're developing them, check out [Simtricks](https://
 For convenience, pre-compiled binaries are available in the [releases](https://github.com/wymcg/matricks/releases) tab.
 To download and run a precompiled binary on your Raspberry Pi, you can run the following commands:
 ```
-MATRICKS_VERSION=0.2.2-beta.1 && \
+MATRICKS_VERSION=0.2.2 && \
 wget https://github.com/wymcg/matricks/releases/download/v$MATRICKS_VERSION/matricks_$MATRICKS_VERSION && \ 
 chmod +x matricks_$MATRICKS_VERSION && \
 ./matricks_$MATRICKS_VERSION 
