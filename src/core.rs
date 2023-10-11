@@ -12,7 +12,6 @@ use crate::path_map::PathMap;
 use crate::plugin_logs;
 use extism::manifest::Wasm;
 use extism::{Function, Manifest, Plugin, ValType};
-use matricks_plugin::PluginUpdate;
 use serde_json::from_str;
 
 /// Core Matricks functionality
@@ -253,8 +252,8 @@ pub fn matricks_core(config: MatricksConfigArgs) {
                                 }
                             };
 
-                            // Make a matrix state object from the string
-                            let new_update = match from_str::<PluginUpdate>(json_result_str) {
+                            // Pull the next matrix state from the plugin's response
+                            let new_matrix_state = match from_str::<Option<Vec<Vec<[u8; 4]>>>>(json_result_str) {
                                 Ok(matrix_state) => matrix_state,
                                 Err(_) => {
                                     log::warn!(
@@ -265,31 +264,21 @@ pub fn matricks_core(config: MatricksConfigArgs) {
                                 }
                             };
 
-                            // Send matrix state to the matrix control thread
-                            match matrix_control_tx.send(new_update.clone()) {
-                                Ok(_) => { /* do nothing if it sent ok */ }
-                                Err(_) => {
-                                    log::error!("Failed to send state update to matrix control.");
-                                    log::info!("Quitting Matricks.");
+                            match new_matrix_state {
+                                None => {
+                                    log::info!("Done with plugin \"{plugin_name}\".");
+                                    break 'update_loop;
                                 }
-                            };
-
-                            // Send plugin logs
-                            match new_update.log_message {
-                                None => { /* Plugin didn't send us anything, so don't do anything */
-                                }
-                                Some(logs) => {
-                                    for log in logs {
-                                        // Send a log message, identifying as the plugin
-                                        log::info!("<{plugin_name}> {log}");
+                                Some(new_matrix_state) => {
+                                    match matrix_control_tx.send(new_matrix_state) {
+                                        Ok(_) => {/* Do nothing, the new state sent without issue */}
+                                        Err(e) => {
+                                            log::error!("Failed to send state update to matrix control.");
+                                            log::debug!("Received the following error while sending new state to matrix controller: {e}");
+                                            log::info!("Quitting Matricks.");
+                                        }
                                     }
                                 }
-                            }
-
-                            // Go to the next plugin if the plugin says it is done
-                            if new_update.done {
-                                log::info!("Halting plugin \"{plugin_name}\" on plugin request.");
-                                break 'update_loop;
                             }
                         }
                         Err(e) => {

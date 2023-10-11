@@ -1,5 +1,4 @@
 use std::collections::BTreeMap;
-use matricks_plugin::PluginUpdate;
 use rs_ws281x::{ChannelBuilder, Controller, ControllerBuilder, StripType, WS2811Error};
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
@@ -20,9 +19,9 @@ const LED_GPIO_PIN: i32 = 10;
 ///
 pub fn start_matrix_control(
     matrix_config: BTreeMap<String, Option<String>>,
-) -> (JoinHandle<()>, Sender<PluginUpdate>) {
+) -> (JoinHandle<()>, Sender<Vec<Vec<[u8;4]>>>) {
     // Make the plugin update channel
-    let (tx, rx) = channel::<PluginUpdate>();
+    let (tx, rx) = channel::<Vec<Vec<[u8;4]>>>();
 
     // Spawn a the matrix control thread
     let handle = thread::spawn(|| matrix_controller(matrix_config, rx));
@@ -31,7 +30,7 @@ pub fn start_matrix_control(
     (handle, tx)
 }
 
-fn matrix_controller(matrix_config: BTreeMap<String, Option<String>>, update_rx: Receiver<PluginUpdate>) {
+fn matrix_controller(matrix_config: BTreeMap<String, Option<String>>, update_rx: Receiver<Vec<Vec<[u8; 4]>>>) {
     //// Pull config fields as Option<String> from the matrix config
     let width: Option<String> = matrix_config.get("width").cloned().unwrap_or(None);
     let height: Option<String> = matrix_config.get("height").cloned().unwrap_or(None);
@@ -123,7 +122,7 @@ fn matrix_controller(matrix_config: BTreeMap<String, Option<String>>, update_rx:
     for update in update_rx {
         {
             let leds = controller.leds_mut(0);
-            for (y, row) in update.state.iter().enumerate() {
+            for (y, row) in update.iter().enumerate() {
                 for (x, color) in row.iter().enumerate() {
                     leds[coord_to_strip_index[y][x]] = *color;
                 }
