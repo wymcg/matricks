@@ -1,18 +1,19 @@
-use std::collections::BTreeMap;
 use crate::clargs::MatricksConfigArgs;
-use crate::plugin_iterator::{PluginIterator, PluginIteratorError};
 use crate::control::start_matrix_control;
+use crate::plugin_iterator::{PluginIterator, PluginIteratorError};
+use std::collections::BTreeMap;
 
 use std::ffi::OsStr;
 use std::path::Path;
 use std::str::from_utf8;
 use std::time::{Duration, Instant};
 
-use extism::{Manifest, Plugin};
+use crate::path_map::PathMap;
+use crate::plugin_logs;
 use extism::manifest::Wasm;
+use extism::{Function, Manifest, Plugin, ValType};
 use matricks_plugin::PluginUpdate;
 use serde_json::from_str;
-use crate::path_map::PathMap;
 
 /// Core Matricks functionality
 ///
@@ -22,15 +23,67 @@ use crate::path_map::PathMap;
 ///
 pub fn matricks_core(config: MatricksConfigArgs) {
     // Calculate the frame time from the FPS option
-    let target_frame_time_ms = Duration::from_nanos((1_000_000_000.0 / config.matrix.fps).round() as u64);
+    let target_frame_time_ms =
+        Duration::from_nanos((1_000_000_000.0 / config.matrix.fps).round() as u64);
 
     // Create the config
     let mut matricks_config: BTreeMap<String, Option<String>> = BTreeMap::new();
-    matricks_config.insert(String::from("width"), Some(format!("{}", config.matrix.width)));
-    matricks_config.insert(String::from("height"), Some(format!("{}", config.matrix.height)));
-    matricks_config.insert(String::from("target_fps"), Some(format!("{}", config.matrix.fps)));
-    matricks_config.insert(String::from("serpentine"), Some(format!("{}", config.matrix.serpentine)));
-    matricks_config.insert(String::from("brightness"), Some(format!("{}", config.matrix.brightness)));
+    matricks_config.insert(
+        String::from("width"),
+        Some(format!("{}", config.matrix.width)),
+    );
+    matricks_config.insert(
+        String::from("height"),
+        Some(format!("{}", config.matrix.height)),
+    );
+    matricks_config.insert(
+        String::from("target_fps"),
+        Some(format!("{}", config.matrix.fps)),
+    );
+    matricks_config.insert(
+        String::from("serpentine"),
+        Some(format!("{}", config.matrix.serpentine)),
+    );
+    matricks_config.insert(
+        String::from("brightness"),
+        Some(format!("{}", config.matrix.brightness)),
+    );
+
+    // Setup the host functions
+    let plugin_debug_log_function = Function::new(
+        "matricks_debug",
+        [ValType::I64],
+        [],
+        None,
+        plugin_logs::plugin_debug_log,
+    );
+    let plugin_info_log_function = Function::new(
+        "matricks_info",
+        [ValType::I64],
+        [],
+        None,
+        plugin_logs::plugin_info_log,
+    );
+    let plugin_warn_log_function = Function::new(
+        "matricks_warn",
+        [ValType::I64],
+        [],
+        None,
+        plugin_logs::plugin_warn_log,
+    );
+    let plugin_error_log_function = Function::new(
+        "matricks_error",
+        [ValType::I64],
+        [],
+        None,
+        plugin_logs::plugin_error_log,
+    );
+    let plugin_functions = [
+        plugin_debug_log_function,
+        plugin_info_log_function,
+        plugin_warn_log_function,
+        plugin_error_log_function,
+    ];
 
     // Process user-supplied path mappings
     let mut path_mappings: Vec<PathMap> = vec![];
@@ -40,7 +93,11 @@ pub fn matricks_core(config: MatricksConfigArgs) {
             for path_map_string in path_map_strings {
                 match PathMap::from_string(path_map_string.clone()) {
                     Ok(path_map) => {
-                        log::info!("Mapping local filesystem path \"{}\" to plugin filesystem path \"{}\"", path_map.from, path_map.to);
+                        log::info!(
+                            "Mapping local filesystem path \"{}\" to plugin filesystem path \"{}\"",
+                            path_map.from,
+                            path_map.to
+                        );
                         path_mappings.push(path_map);
                     }
                     Err(_) => {
@@ -50,7 +107,6 @@ pub fn matricks_core(config: MatricksConfigArgs) {
             }
         }
     }
-
 
     // Start the matrix control thread
     log::info!("Starting the matrix control thread.");
@@ -112,14 +168,21 @@ pub fn matricks_core(config: MatricksConfigArgs) {
 
             // Add the path mappings to the manifest
             for path_map in path_mappings.clone() {
-                log::debug!("Adding mapping from \"{}\" to \"{}\" to the manifest.", path_map.from, path_map.to);
+                log::debug!(
+                    "Adding mapping from \"{}\" to \"{}\" to the manifest.",
+                    path_map.from,
+                    path_map.to
+                );
                 manifest = manifest.with_allowed_path(path_map.from, path_map.to);
             }
 
-
             // Make a new instance of the plugin
             log::info!("Starting plugin \"{plugin_name}\".");
-            let plugin = match Plugin::create_with_manifest(&manifest, [], true) {
+            let plugin = match Plugin::create_with_manifest(
+                &manifest,
+                plugin_functions.clone(),
+                true,
+            ) {
                 Ok(plugin) => plugin,
                 Err(e) => {
                     log::error!("Unable to instantiate plugin \"{plugin_name}\".");
