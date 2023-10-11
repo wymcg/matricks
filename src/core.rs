@@ -1,3 +1,4 @@
+use std::collections::BTreeMap;
 use crate::clargs::MatricksConfigArgs;
 use crate::plugin_iterator::{PluginIterator, PluginIteratorError};
 use crate::control::start_matrix_control;
@@ -7,9 +8,9 @@ use std::path::Path;
 use std::str::from_utf8;
 use std::time::{Duration, Instant};
 
-use extism::{Context, Manifest, Plugin};
+use extism::{Manifest, Plugin};
 use extism::manifest::Wasm;
-use matricks_plugin::{MatrixConfiguration, PluginUpdate};
+use matricks_plugin::PluginUpdate;
 use serde_json::from_str;
 use crate::path_map::PathMap;
 
@@ -22,6 +23,14 @@ use crate::path_map::PathMap;
 pub fn matricks_core(config: MatricksConfigArgs) {
     // Calculate the frame time from the FPS option
     let target_frame_time_ms = Duration::from_nanos((1_000_000_000.0 / config.matrix.fps).round() as u64);
+
+    // Create the config
+    let mut matricks_config: BTreeMap<String, Option<String>> = BTreeMap::new();
+    matricks_config.insert(String::from("width"), Some(format!("{}", config.matrix.width)));
+    matricks_config.insert(String::from("height"), Some(format!("{}", config.matrix.height)));
+    matricks_config.insert(String::from("target_fps"), Some(format!("{}", config.matrix.fps)));
+    matricks_config.insert(String::from("serpentine"), Some(format!("{}", config.matrix.serpentine)));
+    matricks_config.insert(String::from("brightness"), Some(format!("{}", config.matrix.brightness)));
 
     // Process user-supplied path mappings
     let mut path_mappings: Vec<PathMap> = vec![];
@@ -42,27 +51,10 @@ pub fn matricks_core(config: MatricksConfigArgs) {
         }
     }
 
-    // Make the matrix configuration string
-    let mat_config = MatrixConfiguration {
-        width: config.matrix.width,
-        height: config.matrix.height,
-        target_fps: config.matrix.fps,
-        serpentine: config.matrix.serpentine,
-        brightness: config.matrix.brightness,
-        ..Default::default()
-    };
-    let mat_config_string = match serde_json::to_string(&mat_config) {
-        Ok(s) => s,
-        Err(_) => {
-            log::error!("Unable to generate matrix configuration information!");
-            log::info!("Quitting Matricks.");
-            return;
-        }
-    };
 
     // Start the matrix control thread
     log::info!("Starting the matrix control thread.");
-    let (matrix_control_handle, matrix_control_tx) = start_matrix_control(mat_config);
+    let (matrix_control_handle, matrix_control_tx) = start_matrix_control(matricks_config.clone());
 
     // The main loop, which is run infinitely if the loop command line flag is set
     'main_loop: loop {
@@ -109,9 +101,6 @@ pub fn matricks_core(config: MatricksConfigArgs) {
                 .to_str()
                 .unwrap_or(&plugin_path);
 
-            // Make a new context for the plugin
-            let context = Context::new();
-
             // Make a new manifest for the plugin
             let mut manifest = Manifest::new([Wasm::data(plugin_data)]);
 
@@ -130,7 +119,7 @@ pub fn matricks_core(config: MatricksConfigArgs) {
 
             // Make a new instance of the plugin
             log::info!("Starting plugin \"{plugin_name}\".");
-            let mut plugin = match Plugin::new_with_manifest(&context, &manifest, [], true) {
+            let plugin = match Plugin::create_with_manifest(&manifest, [], true) {
                 Ok(plugin) => plugin,
                 Err(e) => {
                     log::error!("Unable to instantiate plugin \"{plugin_name}\".");
@@ -140,8 +129,19 @@ pub fn matricks_core(config: MatricksConfigArgs) {
                 }
             };
 
+            // Apply the config to the plugin
+            let mut plugin = match plugin.with_config(&matricks_config) {
+                Ok(plugin) => plugin,
+                Err(e) => {
+                    log::error!("Unable to apply configuration to plugin \"{plugin_name}\".");
+                    log::debug!("Received the following error while attempting to instantiate the plugin: {e:?}");
+                    log::warn!("This plugin will be skipped.");
+                    continue;
+                }
+            };
+
             // Call setup function of current active plugin
-            let _setup_result = match plugin.call("setup", &mat_config_string) {
+            let _setup_result = match plugin.call("setup", "") {
                 Ok(result) => {
                     log::info!("Successfully set up plugin \"{plugin_name}\".");
                     result
