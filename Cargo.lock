@@ -1306,28 +1306,18 @@ dependencies = [
 
 [[package]]
 name = "matricks"
-version = "0.3.0-alpha.2"
+version = "0.3.0-alpha.3"
 dependencies = [
  "clap 4.4.6",
  "env_logger",
  "extism",
  "glob",
  "log",
- "matricks_plugin",
  "regex",
  "rs_ws281x",
  "serde",
  "serde_json",
  "toml 0.8.1",
-]
-
-[[package]]
-name = "matricks_plugin"
-version = "0.1.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "450889cc5d5570824876437f7a9b3dab383d8d1702ef19f53d7cb3c1f6ac357a"
-dependencies = [
- "serde",
 ]
 
 [[package]]
