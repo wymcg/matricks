@@ -1,6 +1,11 @@
 use clap::{Args, Parser, Subcommand};
 use serde::{Deserialize, Serialize};
 
+pub const MATRICKS_DEFAULT_FPS: &str = "30";
+pub const MATRICKS_DEFAULT_SERPENTINE: &str = "false";
+pub const MATRICKS_DEFAULT_BRIGHTNESS: &str = "255";
+pub const MATRICKS_DEFAULT_LOOP: &str = "false";
+
 #[derive(Parser)]
 #[command(author, version, about, long_about=None)]
 pub struct MatricksArgs {
@@ -56,15 +61,15 @@ pub struct MatrixConfigurationArgs {
     pub height: usize,
 
     /// Target framerate at which to drive the matrix
-    #[arg(short, long, default_value = "30")]
+    #[arg(short, long, default_value = MATRICKS_DEFAULT_FPS)]
     pub fps: f32,
 
     /// Data line alternates direction between columns or rows
-    #[arg(short, long, default_value = "false")]
+    #[arg(short, long, default_value = MATRICKS_DEFAULT_SERPENTINE)]
     pub serpentine: bool,
 
     /// Brightness of matrix, from 0-255
-    #[arg(short, long, default_value = "255")]
+    #[arg(short, long, default_value = MATRICKS_DEFAULT_BRIGHTNESS)]
     pub brightness: u8,
 
 }
@@ -81,7 +86,7 @@ pub struct PluginConfigurationArgs {
     pub time_limit: Option<u64>,
 
     /// Loop plugin or set of plugins indefinitely
-    #[arg(short = 'l', long = "loop", default_value = "false")]
+    #[arg(short = 'l', long = "loop", default_value = MATRICKS_DEFAULT_LOOP)]
     pub loop_plugins: bool,
 
     #[arg(long)]
