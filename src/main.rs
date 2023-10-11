@@ -7,15 +7,21 @@ mod path_map;
 use crate::clargs::{MatricksArgs, MatricksSubcommand};
 use crate::core::matricks_core;
 
-use std::fs;
+use std::{env, fs};
 use clap::Parser;
 use crate::control::{clear_matrix, make_led_controller};
 
 const VERSION: Option<&str> = option_env!("CARGO_PKG_VERSION");
+const DEFAULT_LOG_LEVEL: &str = "matricks=info";
 
 fn main() {
     // Parse command line arguments
     let args = MatricksArgs::parse();
+
+    // If the user has not setup the logger themselves, set the log level to the default
+    if env::var("RUST_LOG").is_err() {
+        env::set_var("RUST_LOG", DEFAULT_LOG_LEVEL);
+    }
 
     // Start the logger
     env_logger::init();
