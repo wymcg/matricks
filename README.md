@@ -27,10 +27,13 @@ To simulate plugins while you're developing them, check out [Simtricks](https://
   - Run the executable
 
 ## Use a pre-compiled binary
-For convenience, pre-compiled binaries are available in the [releases](https://github.com/wymcg/matricks/releases) tab.
-To download and run a precompiled binary on your Raspberry Pi, you can run the following commands:
+For convenience, pre-compiled binaries are available in the releases tab.
+- Run `apt install libclang-dev libssl-dev`
+- Install and configure the rpi_ws281x library.
+Then, you may run the following command to download and run Matricks:
+
 ```
-MATRICKS_VERSION=0.3.0-beta.0 && \
+MATRICKS_VERSION=0.3.0 && \
 wget https://github.com/wymcg/matricks/releases/download/v$MATRICKS_VERSION/matricks_$MATRICKS_VERSION && \ 
 chmod +x matricks_$MATRICKS_VERSION && \
 ./matricks_$MATRICKS_VERSION 
