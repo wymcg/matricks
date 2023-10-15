@@ -194,10 +194,9 @@ Hopefully, you've been able to get your hands dirty with some Matricks plugin de
 
 - [Matricks GitHub](https://github.com/wymcg/matricks)
 - [Example Plugins](https://github.com/wymcg/matricks/issues/39)
-- [matricks_plugin docs.rs](https://docs.rs/matricks_plugin/latest/matricks_plugin/)
 - [Extism PDK for Rust](https://extism.org/docs/write-a-plugin/rust-pdk/)
 - [Extism PDK for other languages](https://extism.org/docs/category/write-a-plug-in)
 
-If you like this project, contribute on [GitHub](https://github.com/wymcg/matricks/issues)!
+
 
 ---
