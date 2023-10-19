@@ -1306,7 +1306,7 @@ dependencies = [
 
 [[package]]
 name = "matricks"
-version = "0.3.0-alpha.3"
+version = "0.3.0"
 dependencies = [
  "clap 4.4.6",
  "env_logger",
