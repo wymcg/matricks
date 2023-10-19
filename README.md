@@ -33,7 +33,7 @@ For convenience, pre-compiled binaries are available in the releases tab.
 Then, you may run the following command to download and run Matricks:
 
 ```
-MATRICKS_VERSION=0.3.0 && \
+MATRICKS_VERSION=0.3.1 && \
 wget https://github.com/wymcg/matricks/releases/download/v$MATRICKS_VERSION/matricks_$MATRICKS_VERSION && \ 
 chmod +x matricks_$MATRICKS_VERSION && \
 ./matricks_$MATRICKS_VERSION 
