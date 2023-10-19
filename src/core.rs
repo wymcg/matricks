@@ -275,7 +275,7 @@ pub fn matricks_core(config: MatricksConfigArgs) {
                                         Err(e) => {
                                             log::error!("Failed to send state update to matrix control.");
                                             log::debug!("Received the following error while sending new state to matrix controller: {e}");
-                                            log::info!("Quitting Matricks.");
+                                            break 'main_loop;
                                         }
                                     }
                                 }
