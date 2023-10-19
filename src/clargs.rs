@@ -89,9 +89,11 @@ pub struct PluginConfigurationArgs {
     #[arg(short = 'l', long = "loop", default_value = MATRICKS_DEFAULT_LOOP)]
     pub loop_plugins: bool,
 
+    /// Allow plugins to access a particular network host
     #[arg(long)]
     pub allow_host: Option<Vec<String>>,
 
+    /// Map a path on the host filesystem to a path on the plugin filesystem. Inputs should be of the form "DEST_PATH>HOST_PATH".
     #[arg(long)]
     pub map_path: Option<Vec<String>>,
 }
