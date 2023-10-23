@@ -43,7 +43,7 @@ fn main() {
 
             // Read the file to a string
             let matrix_config_string_toml = match fs::read_to_string(&file_info.config_path) {
-                Ok(string) => {string}
+                Ok(string) => string,
                 Err(e) => {
                     log::error!("Failed to read config file at path \"{}\".", file_info.config_path);
                     log::debug!("Received the following error while attempting to read file: {e:?}");
@@ -54,10 +54,7 @@ fn main() {
 
             // Pull the matrix config out of the string
             let config = match toml::from_str(&matrix_config_string_toml) {
-                Ok(config) => {
-                    log::info!("Matrix configuration has been supplied from a configuration file.");
-                    config
-                }
+                Ok(config) => config,
                 Err(e) => {
                     log::error!("Failed to parse config file at path \"{}\".", file_info.config_path);
                     log::debug!("Received the following error while attempting to parse file: {e:?}");
@@ -77,7 +74,7 @@ fn main() {
 
             // Serialize the matrix configuration to a string
             let config_string_toml = match toml::to_string(&matrix_config) {
-                Ok(string) => {string}
+                Ok(string) => string,
                 Err(e) => {
                     log::error!("Failed to serialize matrix configuration");
                     log::debug!("Received the following error while attempting to serialize matrix configuration: {e:?}");
@@ -105,7 +102,7 @@ fn main() {
 
             // Make an LED controller
             let mut controller = match make_led_controller(matrix_config.width as i32, matrix_config.height as i32, matrix_config.brightness) {
-                Ok(c) => { c }
+                Ok(c) => c,
                 Err(e) => {
                     log::error!("Failed to create LED controller.");
                     log::debug!("Received the following error while attempting to create LED controller: {e:?}");
