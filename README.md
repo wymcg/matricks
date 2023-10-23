@@ -7,14 +7,28 @@ LED matrix functionality is defined by user-developed plugins, or "tricks", whic
 is supported by the [Extism PDK](https://extism.org/docs/category/write-a-plug-in). 
 To simulate plugins while you're developing them, check out [Simtricks](https://github.com/wymcg/simtricks)!
 
-## Installation on Raspberry Pi
+## Run Matricks
+
+### Installation on Raspberry Pi
 - Install 64-bit Raspbian[^1] on your Raspberry Pi[^2]
 - Install Rust and Cargo from [the Rust website](https://rustup.rs)
 - Run `apt install libclang-dev libssl-dev`
-- Install and configure the [rpi_ws281x library](https://github.com/rpi-ws281x/rpi_ws281x).
 - Run `cargo install matricks`
+- [Configure your Raspberry Pi](#raspberry-pi-configuration) and reboot
 
-## Cross-compilation for Raspberry Pi
+### Use a pre-compiled binary
+For convenience, pre-compiled binaries are available in the releases tab.
+- [Configure your Raspberry Pi](#raspberry-pi-configuration) and reboot
+- Run the following command to download and run Matricks:
+
+```
+MATRICKS_VERSION=0.3.1 && \
+wget https://github.com/wymcg/matricks/releases/download/v$MATRICKS_VERSION/matricks_$MATRICKS_VERSION && \ 
+chmod +x matricks_$MATRICKS_VERSION && \
+./matricks_$MATRICKS_VERSION 
+```
+
+### Cross-compilation
 - On another device,
   - Install Rust and Cargo from [the Rust website](https://rustup.rs)
   - Run `rustup target add aarch64-unknown-linux-musl`
@@ -23,21 +37,8 @@ To simulate plugins while you're developing them, check out [Simtricks](https://
   - Transfer the produced executable to your Raspberry Pi
 - On your Raspberry Pi,
   - Install 64-bit Raspbian[^1]
-  - Install and configure the [rpi_ws281x library](https://github.com/rpi-ws281x/rpi_ws281x).
+  - [Configure your Raspberry Pi](#raspberry-pi-configuration) and reboot
   - Run the executable
-
-## Use a pre-compiled binary
-For convenience, pre-compiled binaries are available in the releases tab.
-- Run `apt install libclang-dev libssl-dev`
-- Install and configure the rpi_ws281x library.
-Then, you may run the following command to download and run Matricks:
-
-```
-MATRICKS_VERSION=0.3.1 && \
-wget https://github.com/wymcg/matricks/releases/download/v$MATRICKS_VERSION/matricks_$MATRICKS_VERSION && \ 
-chmod +x matricks_$MATRICKS_VERSION && \
-./matricks_$MATRICKS_VERSION 
-```
 
 ## Usage
 This section describes basic usage of Matricks. For general usage information, run `matricks help`.
@@ -95,3 +96,27 @@ RUST_LOG=matricks=info matricks auto your_config.toml
 
 [^1]: At this time, Matricks can only be installed and run on 64-bit operating systems.
 [^2]: If you are using a Raspberry Pi with less than 1GB of RAM, installation using this method is not recommended.
+
+## Raspberry Pi Configuration
+Matricks requires some configuration before it can be used to drive a LED matrix. 
+If these instructions are not followed, Matricks may not work as expected.
+This section paraphrases the instructions from the [rpi_ws281x README](https://github.com/jgarff/rpi_ws281x#spi).
+
+### Enable SPI
+The easiest way to enable SPI on Raspberry Pi is with the `raspi-config` command line tool.
+Run `sudo raspi-config` and navigate to the SPI activation dialog by selecting `Interface Options > SPI`.
+
+### Change GPU Core Frequency
+Add the following lines to `/boot/config.txt`:
+
+| Device         | Lines to Add                                    |
+|----------------|-------------------------------------------------|
+| Raspberry Pi 3 | ```core_freq=250```                             |
+| Raspberry Pi 4 | ```core_freq=500```<br/>```core_freq_min=500``` |
+
+### Change SPI Buffer Size (optional)
+On some distributions, it may be necessary to increase the maximum SPI transfer size by editing `/boot/cmdline.txt` and adding the following line:
+
+```
+spidev.bufsize=32768
+```
