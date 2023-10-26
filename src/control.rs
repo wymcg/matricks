@@ -7,6 +7,7 @@ use std::sync::{Arc, LockResult, Mutex};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
 use std::thread::JoinHandle;
+use std::time::Duration;
 
 const LED_SIGNAL_FREQUENCY: u32 = 800_000; // 800kHz
 const LED_DMA_CHANNEL: i32 = 10;
@@ -100,13 +101,13 @@ impl MatrixController {
             return Ok(());
         }
 
-        // Setup the thread flags
-        self.matrix_update_thread_alive.store(true, Ordering::Relaxed);
+        // Set the thread continue flag
         self.matrix_update_thread_continue.store(true, Ordering::Relaxed);
 
         // Make a few copies of things for the update thread
         let thread_matrix_state = Arc::clone(&self.matrix_state);
         let mut thread_continue = Arc::clone(&self.matrix_update_thread_continue);
+        let mut thread_alive = Arc::clone(&self.matrix_update_thread_alive);
         let width = self.matrix_dimensions.0;
         let height = self.matrix_dimensions.1;
         let brightness = self.brightness;
@@ -119,6 +120,9 @@ impl MatrixController {
 
         // Start the matrix update thread
         thread::spawn(move || {
+            // Mark the thread as alive
+            thread_alive.store(true, Ordering::Relaxed);
+
             // Create the LED controller
             let mut controller = match ControllerBuilder::new()
                 .freq(LED_SIGNAL_FREQUENCY)
@@ -185,8 +189,9 @@ impl MatrixController {
                 }
             };
 
-            // Mark that the thread has stopped
-            thread_continue.store(false, Ordering::Relaxed)
+            // Mark the thread as dead
+            thread_alive.store(false, Ordering::Relaxed);
+
         });
 
         Ok(())
@@ -200,6 +205,11 @@ impl MatrixController {
 
         // Tell the thread to stop
         self.matrix_update_thread_continue.store(false, Ordering::Relaxed);
+
+        // Wait for the thread to stop
+        while self.matrix_update_thread_alive.load(Ordering::Relaxed) {
+            thread::sleep(Duration::from_secs(1));
+        }
 
         Ok(())
     }
