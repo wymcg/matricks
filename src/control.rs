@@ -4,56 +4,14 @@ use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
 use std::time::Duration;
+use crate::matrix_map::{MatrixMap, MatrixMapBuilder};
 
-#[derive(Clone)]
-struct MatrixMap {
-    width: usize,
-    height: usize,
-    map: Vec<Vec<usize>>
-}
-
-impl MatrixMap {
-    pub fn new(width: usize, height: usize) -> Self {
-        let mut map: Vec<Vec<usize>> = vec![];
-        for y in 0..height {
-            map.push(vec![]);
-            for x in 0..width {
-                let strip_index = (y * width) + x;
-                map[y].push(strip_index);
-            }
-        }
-
-        Self {
-            width,
-            height,
-            map
-        }
-    }
-
-    pub fn serpentine(&self) -> Self {
-        let mut map = self.map.clone();
-        for (y, row) in map.iter_mut().enumerate() {
-            if y % 2 == 1 {
-                row.reverse();
-            }
-        }
-
-        Self {
-            width: self.width,
-            height: self.height,
-            map
-        }
-    }
-
-    pub fn get(&self, x: usize, y: usize) -> usize {
-        self.map[y][x]
-    }
-}
 
 pub struct MatrixController {
     matrix_dimensions: (usize, usize),
     matrix_state: Arc<Mutex<Vec<Vec<[u8; 4]>>>>,
     serpentine: bool,
+    vertical: bool,
     dma_channel: u16,
     gpio_pin: u16,
     signal_frequency: u32,
@@ -66,6 +24,7 @@ impl MatrixController {
     pub fn new(
         matrix_dimensions: (usize, usize),
         serpentine: bool,
+        vertical: bool,
         brightness: u8,
         gpio_pin: u16,
         dma_channel: u16,
@@ -78,6 +37,7 @@ impl MatrixController {
                 matrix_dimensions.1
             ])),
             serpentine,
+            vertical,
             dma_channel,
             gpio_pin,
             signal_frequency,
@@ -108,10 +68,14 @@ impl MatrixController {
         let gpio_pin = self.gpio_pin;
 
         // Make a matrix map
-        let mut matrix_map = MatrixMap::new(self.matrix_dimensions.0, self.matrix_dimensions.1);
+        let mut matrix_map_builder = MatrixMapBuilder::new(self.matrix_dimensions.0, self.matrix_dimensions.1);
         if self.serpentine {
-            matrix_map = matrix_map.serpentine();
+            matrix_map_builder = matrix_map_builder.serpentine();
         }
+        if self.vertical {
+            matrix_map_builder = matrix_map_builder.vertical();
+        }
+        let matrix_map = matrix_map_builder.build();
 
         // Start the matrix update thread
         thread::spawn(move || {
