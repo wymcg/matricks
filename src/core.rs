@@ -1,5 +1,5 @@
 use crate::clargs::MatricksConfigArgs;
-use crate::control::start_matrix_control;
+use crate::control::MatrixController;
 use crate::plugin_iterator::{PluginIterator, PluginIteratorError};
 use std::collections::BTreeMap;
 
@@ -107,9 +107,23 @@ pub fn matricks_core(config: MatricksConfigArgs) {
         }
     }
 
-    // Start the matrix control thread
-    log::info!("Starting the matrix control thread.");
-    let (matrix_control_handle, matrix_control_tx) = start_matrix_control(matricks_config.clone());
+    // Create a new matrix controller object
+    let mut matrix = MatrixController::new(
+        (config.matrix.width, config.matrix.height),
+        config.matrix.serpentine,
+        config.matrix.brightness,
+        config.matrix.controller.gpio,
+        config.matrix.controller.dma,
+        config.matrix.controller.frequency
+    );
+
+    // Start the matrix controleler
+    match matrix.start() {
+        Ok(_) => {}
+        Err(_) => {
+            log::error!("Failed to start new matrix controller.");
+        }
+    }
 
     // The main loop, which is run infinitely if the loop command line flag is set
     'main_loop: loop {
@@ -270,11 +284,10 @@ pub fn matricks_core(config: MatricksConfigArgs) {
                                     break 'update_loop;
                                 }
                                 Some(new_matrix_state) => {
-                                    match matrix_control_tx.send(new_matrix_state) {
+                                    match matrix.update(new_matrix_state) {
                                         Ok(_) => {/* Do nothing, the new state sent without issue */}
-                                        Err(e) => {
-                                            log::error!("Failed to send state update to matrix control.");
-                                            log::debug!("Received the following error while sending new state to matrix controller: {e}");
+                                        Err(_) => {
+                                            log::error!("Failed to update matrix controller.");
                                             break 'main_loop;
                                         }
                                     }
@@ -302,13 +315,13 @@ pub fn matricks_core(config: MatricksConfigArgs) {
 
     log::info!("Quitting Matricks.");
 
-    // Close the connection to the matrix control thread, which allows the matrix control thread to stop
-    drop(matrix_control_tx);
-
-    // Join logging and matrix control threads
-    matrix_control_handle
-        .join()
-        .unwrap_or_else(|_| log::warn!("Unable to join matrix control thread."));
+    // Stop the update thread
+    match matrix.stop() {
+        Ok(_) => {}
+        Err(_) => {
+            log::error!("Failed to stop matrix controller.");
+        }
+    }
 
     log::info!("Done.");
 }
