@@ -9,10 +9,6 @@ use std::thread;
 use std::thread::JoinHandle;
 use std::time::Duration;
 
-const LED_SIGNAL_FREQUENCY: u32 = 800_000; // 800kHz
-const LED_DMA_CHANNEL: i32 = 10;
-const LED_GPIO_PIN: i32 = 10;
-
 #[derive(Clone)]
 struct MatrixMap {
     width: usize,
@@ -111,6 +107,9 @@ impl MatrixController {
         let width = self.matrix_dimensions.0;
         let height = self.matrix_dimensions.1;
         let brightness = self.brightness;
+        let frequency = self.signal_frequency;
+        let dma_channel = self.dma_channel;
+        let gpio_pin = self.gpio_pin;
 
         // Make a matrix map
         let mut matrix_map = MatrixMap::new(self.matrix_dimensions.0, self.matrix_dimensions.1);
@@ -125,12 +124,12 @@ impl MatrixController {
 
             // Create the LED controller
             let mut controller = match ControllerBuilder::new()
-                .freq(LED_SIGNAL_FREQUENCY)
-                .dma(LED_DMA_CHANNEL)
+                .freq(frequency)
+                .dma(dma_channel as i32)
                 .channel(
                     0, // channel index
                     ChannelBuilder::new()
-                        .pin(LED_GPIO_PIN)
+                        .pin(gpio_pin as i32)
                         .count((width * height) as i32)
                         .strip_type(StripType::Ws2812)
                         .brightness(brightness)
@@ -234,24 +233,4 @@ pub fn clear_matrix(led_controller: &mut Controller) -> Result<(), WS2811Error> 
         *led = [0, 0, 0, 0];
     }
     led_controller.render()
-}
-
-pub fn make_led_controller(
-    width: i32,
-    height: i32,
-    brightness: u8,
-) -> Result<Controller, WS2811Error> {
-    ControllerBuilder::new()
-        .freq(LED_SIGNAL_FREQUENCY)
-        .dma(LED_DMA_CHANNEL)
-        .channel(
-            0, // channel index
-            ChannelBuilder::new()
-                .pin(LED_GPIO_PIN)
-                .count(width * height)
-                .strip_type(StripType::Ws2812)
-                .brightness(brightness)
-                .build(),
-        )
-        .build()
 }

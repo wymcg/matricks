@@ -1,17 +1,18 @@
 mod clargs;
 mod control;
-mod plugin_iterator;
 mod core;
-mod path_map;
-mod plugin_logs;
 mod matrix_state;
+mod path_map;
+mod plugin_iterator;
+mod plugin_logs;
 
 use crate::clargs::{MatricksArgs, MatricksSubcommand};
 use crate::core::matricks_core;
 
-use std::{env, fs};
+use crate::control::clear_matrix;
 use clap::Parser;
-use crate::control::{clear_matrix, make_led_controller};
+use rs_ws281x::{ChannelBuilder, ControllerBuilder, StripType};
+use std::{env, fs};
 
 const VERSION: Option<&str> = option_env!("CARGO_PKG_VERSION");
 const DEFAULT_LOG_LEVEL: &str = "matricks=info";
@@ -46,8 +47,13 @@ fn main() {
             let matrix_config_string_toml = match fs::read_to_string(&file_info.config_path) {
                 Ok(string) => string,
                 Err(e) => {
-                    log::error!("Failed to read config file at path \"{}\".", file_info.config_path);
-                    log::debug!("Received the following error while attempting to read file: {e:?}");
+                    log::error!(
+                        "Failed to read config file at path \"{}\".",
+                        file_info.config_path
+                    );
+                    log::debug!(
+                        "Received the following error while attempting to read file: {e:?}"
+                    );
                     log::info!("Quitting Matricks.");
                     return;
                 }
@@ -57,8 +63,13 @@ fn main() {
             let config = match toml::from_str(&matrix_config_string_toml) {
                 Ok(config) => config,
                 Err(e) => {
-                    log::error!("Failed to parse config file at path \"{}\".", file_info.config_path);
-                    log::debug!("Received the following error while attempting to parse file: {e:?}");
+                    log::error!(
+                        "Failed to parse config file at path \"{}\".",
+                        file_info.config_path
+                    );
+                    log::debug!(
+                        "Received the following error while attempting to parse file: {e:?}"
+                    );
                     log::info!("Quitting Matricks.");
                     return;
                 }
@@ -91,7 +102,10 @@ fn main() {
                     return;
                 }
                 Err(e) => {
-                    log::error!("Failed to write matrix configuration to configuration file at path \"{}\"", info.config_path);
+                    log::error!(
+                        "Failed to write matrix configuration to configuration file at path \"{}\"",
+                        info.config_path
+                    );
                     log::debug!("Received the following error while attempting to write matrix configuration to file: {e:?}");
                     log::info!("Quitting Matricks.");
                     return;
@@ -102,7 +116,20 @@ fn main() {
             log::info!("Clearing the matrix.");
 
             // Make an LED controller
-            let mut controller = match make_led_controller(matrix_config.width as i32, matrix_config.height as i32, matrix_config.brightness) {
+            let mut controller = match ControllerBuilder::new()
+                .freq(matrix_config.controller.frequency)
+                .dma(matrix_config.controller.dma as i32)
+                .channel(
+                    0, // channel index
+                    ChannelBuilder::new()
+                        .pin(matrix_config.controller.gpio as i32)
+                        .count((matrix_config.width * matrix_config.height) as i32)
+                        .strip_type(StripType::Ws2812)
+                        .brightness(matrix_config.brightness)
+                        .build(),
+                )
+                .build()
+            {
                 Ok(c) => c,
                 Err(e) => {
                     log::error!("Failed to create LED controller.");

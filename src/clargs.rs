@@ -5,6 +5,9 @@ pub const MATRICKS_DEFAULT_FPS: &str = "30";
 pub const MATRICKS_DEFAULT_SERPENTINE: &str = "false";
 pub const MATRICKS_DEFAULT_BRIGHTNESS: &str = "255";
 pub const MATRICKS_DEFAULT_LOOP: &str = "false";
+pub const MATRICKS_DEFAULT_DMA_CHANNEL: &str = "10";
+pub const MATRICKS_DEFAULT_GPIO_PIN: &str = "10";
+pub const MATRICKS_DEFAULT_LED_SIGNAL_FREQ: &str = "800000";
 
 #[derive(Parser)]
 #[command(author, version, about, long_about=None)]
@@ -51,6 +54,21 @@ pub struct ConfigurationFileWriteInfo {
 }
 
 #[derive(Serialize, Deserialize, Args, Clone)]
+pub struct LEDControllerArgs {
+    /// GPIO used to drive the matrix
+    #[arg(short, long, default_value = MATRICKS_DEFAULT_GPIO_PIN)]
+    pub gpio: u16,
+
+    /// DMA channel used to drive the matrix
+    #[arg(short, long, default_value = MATRICKS_DEFAULT_DMA_CHANNEL)]
+    pub dma: u16,
+
+    /// Signal rate of the LED controller, in Hz
+    #[arg(long, default_value = MATRICKS_DEFAULT_SIGNAL_FREQUENCY)]
+    pub frequency: u32,
+}
+
+#[derive(Serialize, Deserialize, Args, Clone)]
 pub struct MatrixConfigurationArgs {
     /// Width of the matrix, in number of LEDs
     #[arg(short = 'x', long)]
@@ -72,6 +90,8 @@ pub struct MatrixConfigurationArgs {
     #[arg(short, long, default_value = MATRICKS_DEFAULT_BRIGHTNESS)]
     pub brightness: u8,
 
+    #[command(flatten)]
+    pub controller: LEDControllerArgs,
 }
 
 

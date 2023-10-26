@@ -112,9 +112,9 @@ pub fn matricks_core(config: MatricksConfigArgs) {
         (config.matrix.width, config.matrix.height),
         config.matrix.serpentine,
         config.matrix.brightness,
-        10,
-        10,
-        800_000
+        config.matrix.controller.gpio,
+        config.matrix.controller.dma,
+        config.matrix.controller.frequency
     );
 
     // Start the matrix controleler
