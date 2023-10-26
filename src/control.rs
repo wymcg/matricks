@@ -1,12 +1,8 @@
-use crate::clargs::{MATRICKS_DEFAULT_BRIGHTNESS, MATRICKS_DEFAULT_SERPENTINE};
 use crate::matrix_state::MatrixState;
 use rs_ws281x::{ChannelBuilder, Controller, ControllerBuilder, StripType, WS2811Error};
-use std::collections::BTreeMap;
-use std::sync::mpsc::{channel, Receiver, Sender, SendError};
-use std::sync::{Arc, LockResult, Mutex};
+use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
-use std::thread::JoinHandle;
 use std::time::Duration;
 
 #[derive(Clone)]
@@ -102,8 +98,8 @@ impl MatrixController {
 
         // Make a few copies of things for the update thread
         let thread_matrix_state = Arc::clone(&self.matrix_state);
-        let mut thread_continue = Arc::clone(&self.matrix_update_thread_continue);
-        let mut thread_alive = Arc::clone(&self.matrix_update_thread_alive);
+        let thread_continue = Arc::clone(&self.matrix_update_thread_continue);
+        let thread_alive = Arc::clone(&self.matrix_update_thread_alive);
         let width = self.matrix_dimensions.0;
         let height = self.matrix_dimensions.1;
         let brightness = self.brightness;

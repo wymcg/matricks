@@ -64,7 +64,7 @@ pub struct LEDControllerArgs {
     pub dma: u16,
 
     /// Signal rate of the LED controller, in Hz
-    #[arg(long, default_value = MATRICKS_DEFAULT_SIGNAL_FREQUENCY)]
+    #[arg(long, default_value = MATRICKS_DEFAULT_LED_SIGNAL_FREQ)]
     pub frequency: u32,
 }
 
