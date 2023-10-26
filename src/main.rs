@@ -4,6 +4,7 @@ mod plugin_iterator;
 mod core;
 mod path_map;
 mod plugin_logs;
+mod matrix_state;
 
 use crate::clargs::{MatricksArgs, MatricksSubcommand};
 use crate::core::matricks_core;
