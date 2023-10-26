@@ -111,6 +111,7 @@ pub fn matricks_core(config: MatricksConfigArgs) {
     let mut matrix = MatrixController::new(
         (config.matrix.width, config.matrix.height),
         config.matrix.serpentine,
+        config.matrix.vertical,
         config.matrix.brightness,
         config.matrix.controller.gpio,
         config.matrix.controller.dma,
