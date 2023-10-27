@@ -4,7 +4,7 @@ use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
 use std::time::Duration;
-use crate::matrix_map::{MatrixMap, MatrixMapBuilder};
+use crate::matrix_map::MatrixMapBuilder;
 
 
 pub struct MatrixController {
@@ -127,8 +127,17 @@ impl MatrixController {
                 // Push the update to the LEDs
                 match controller.render() {
                     Ok(_) => { /* Do nothing */ }
-                    Err(_) => {
-                        log::warn!("Failed to push plugin changes to matrix.");
+                    Err(e) => {
+                        log::error!("Failed to push plugin changes to matrix.");
+                        log::debug!("Failed with the following error: {e}");
+
+                        match e {
+                            WS2811Error::SpiTransfer => {
+                                log::warn!("Failed to transfer data to LEDs. It is possible that too few LEDs are connected, or the SPI buffer is too small.");
+                            }
+                            _ => {}
+                        }
+                        break 'update;
                     }
                 }
 
