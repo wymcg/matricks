@@ -114,7 +114,7 @@ pub struct MatrixConfigurationArgs {
 /// Options relevant to setting up plugins
 #[derive(Serialize, Deserialize, Args, Clone)]
 pub struct PluginConfigurationArgs {
-    /// Path to plugin
+    /// Add a plugin at a given path to the playlist
     #[arg(short, long, required = true)]
     pub plugin: Vec<String>,
 
