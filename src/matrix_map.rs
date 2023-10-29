@@ -23,6 +23,8 @@ pub(crate) struct MatrixMapBuilder {
     height: usize,
     serpentine: bool,
     vertical: bool,
+    mirror_horizontal: bool,
+    mirror_vertical: bool,
 }
 
 impl MatrixMapBuilder {
@@ -38,6 +40,8 @@ impl MatrixMapBuilder {
             height,
             serpentine: false,
             vertical: false,
+            mirror_horizontal: false,
+            mirror_vertical: false,
         }
     }
 
@@ -82,6 +86,18 @@ impl MatrixMapBuilder {
             map = transposed_map
         }
 
+        // Mirror the matrix vertically if needed
+        if self.mirror_vertical {
+            map.reverse();
+        }
+
+        // Mirror the matrix horizontally if needed
+        if self.mirror_horizontal {
+            for y in 0..self.height {
+                map[y].reverse();
+            }
+        }
+
         MatrixMap {
             map,
         }
@@ -97,6 +113,18 @@ impl MatrixMapBuilder {
     /// Specify that the matrix is vertically wired
     pub(crate) fn vertical(mut self) -> Self {
         self.vertical = true;
+        self
+    }
+
+    /// Mirror the matrix vertically
+    pub(crate) fn mirror_vertically(mut self) -> Self {
+        self.mirror_vertical = true;
+        self
+    }
+
+    /// Mirror the matrix horizontally
+    pub(crate) fn mirror_horizontally(mut self) -> Self {
+        self.mirror_horizontal = true;
         self
     }
 }
