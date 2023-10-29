@@ -1,16 +1,14 @@
 mod clargs;
-mod control;
 mod core;
-mod matrix_map;
-mod matrix_state;
 mod path_map;
 mod plugin_iterator;
 mod plugin_logs;
+mod matrix;
 
 use crate::clargs::{MatricksArgs, MatricksSubcommand};
 use crate::core::matricks_core;
 
-use crate::control::clear_matrix;
+use crate::matrix::matrix_control::clear_matrix;
 use clap::Parser;
 use rs_ws281x::{ChannelBuilder, ControllerBuilder, StripType};
 use std::{env, fs};
