@@ -1,6 +1,5 @@
 use crate::clargs::MatricksConfigArgs;
 use crate::matrix::matrix_control::MatrixController;
-use crate::plugin::plugin_iterator::{PluginIterator, PluginIteratorError};
 use std::collections::BTreeMap;
 
 use std::ffi::OsStr;
