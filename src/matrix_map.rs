@@ -1,18 +1,31 @@
+/// Maps LEDs in a 2D matrix to a strip of LEDs
 #[derive(Clone)]
-pub struct MatrixMap {
-    width: usize,
-    height: usize,
+pub(crate) struct MatrixMap {
     map: Vec<Vec<usize>>
 }
 
 impl MatrixMap {
-    pub fn get(&self, x: usize, y: usize) -> usize {
+    /// Get the index in the LED strip of the pixel at matrix coordinate (x, y)
+    ///
+    /// # Arguments
+    ///
+    /// `x` - X-coordinate of the target LED
+    /// `y` - Y-coordinate of the target LED
+    ///
+    /// # Example
+    /// ```
+    /// let matrix_map = MatrixMapBuilder::new(10, 10).build()
+    /// assert_eq!(matrix_map.get(0, 0), 0);
+    /// assert_eq!(matrix_map.get(9, 9), 99);
+    /// assert_eq!(matrix_map.get(3, 4), 41);
+    /// ```
+    pub(crate) fn get(&self, x: usize, y: usize) -> usize {
         self.map[y][x]
     }
 }
 
 #[derive(Clone)]
-pub struct MatrixMapBuilder {
+pub(crate) struct MatrixMapBuilder {
     width: usize,
     height: usize,
     serpentine: bool,
@@ -20,7 +33,13 @@ pub struct MatrixMapBuilder {
 }
 
 impl MatrixMapBuilder {
-    pub fn new(width: usize, height: usize) -> Self {
+    /// Create a new MatrixMap builder
+    ///
+    /// # Arguments
+    /// `width` - Width of the matrix, in number of LEDs
+    /// `height` - Height of the matrix, in number of LEDs
+    ///
+    pub(crate) fn new(width: usize, height: usize) -> Self {
         Self {
             width,
             height,
@@ -29,7 +48,8 @@ impl MatrixMapBuilder {
         }
     }
 
-    pub fn build(&self) -> MatrixMap {
+    /// Build a new MatrixMap
+    pub(crate) fn build(&self) -> MatrixMap {
         // Determine the initial width and height of the map as we are constructing it
         let mut construct_width = self.width;
         let mut construct_height = self.height;
@@ -70,19 +90,19 @@ impl MatrixMapBuilder {
         }
 
         MatrixMap {
-            width: self.width,
-            height: self.height,
             map,
         }
 
     }
 
-    pub fn serpentine(mut self) -> Self {
+    /// Specify that the matrix is serpentine
+    pub(crate) fn serpentine(mut self) -> Self {
         self.serpentine = true;
         self
     }
 
-    pub fn vertical(mut self) -> Self {
+    /// Specify that the matrix is vertically wired
+    pub(crate) fn vertical(mut self) -> Self {
         self.vertical = true;
         self
     }
