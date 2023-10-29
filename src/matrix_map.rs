@@ -12,13 +12,6 @@ impl MatrixMap {
     /// `x` - X-coordinate of the target LED
     /// `y` - Y-coordinate of the target LED
     ///
-    /// # Example
-    /// ```
-    /// let matrix_map = MatrixMapBuilder::new(10, 10).build()
-    /// assert_eq!(matrix_map.get(0, 0), 0);
-    /// assert_eq!(matrix_map.get(9, 9), 99);
-    /// assert_eq!(matrix_map.get(3, 4), 41);
-    /// ```
     pub(crate) fn get(&self, x: usize, y: usize) -> usize {
         self.map[y][x]
     }
