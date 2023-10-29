@@ -1,10 +1,10 @@
+use crate::matrix_map::{MatrixMap, MatrixMapBuilder};
 use crate::matrix_state::MatrixState;
 use rs_ws281x::{ChannelBuilder, Controller, ControllerBuilder, StripType, WS2811Error};
-use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
-use crate::matrix_map::{MatrixMap, MatrixMapBuilder};
 
 /// Manages the matrix update thread
 pub(crate) struct MatrixController {
@@ -62,10 +62,18 @@ impl MatrixController {
     ) -> Self {
         // Create the matrix map
         let mut matrix_map = MatrixMapBuilder::new(matrix_dimensions.0, matrix_dimensions.1);
-        if serpentine {matrix_map = matrix_map.serpentine();}
-        if vertical {matrix_map = matrix_map.vertical();}
-        if mirror_horizontal {matrix_map = matrix_map.mirror_horizontally();}
-        if mirror_vertical {matrix_map = matrix_map.mirror_vertically();}
+        if serpentine {
+            matrix_map = matrix_map.serpentine();
+        }
+        if vertical {
+            matrix_map = matrix_map.vertical();
+        }
+        if mirror_horizontal {
+            matrix_map = matrix_map.mirror_horizontally();
+        }
+        if mirror_vertical {
+            matrix_map = matrix_map.mirror_vertically();
+        }
         let matrix_map = matrix_map.build();
 
         Self {
@@ -92,7 +100,8 @@ impl MatrixController {
         }
 
         // Set the thread continue flag
-        self.matrix_update_thread_continue.store(true, Ordering::Relaxed);
+        self.matrix_update_thread_continue
+            .store(true, Ordering::Relaxed);
 
         // Make a few copies of things for the update thread
         let thread_matrix_state = Arc::clone(&self.matrix_state);
@@ -124,8 +133,9 @@ impl MatrixController {
                         .brightness(brightness)
                         .build(),
                 )
-                .build() {
-                Ok(controller) => {controller}
+                .build()
+            {
+                Ok(controller) => controller,
                 Err(e) => {
                     log::error!("Failed to create LED controller.");
                     log::debug!("Failed with the following error: {e}");
@@ -188,7 +198,6 @@ impl MatrixController {
 
             // Mark the thread as dead
             thread_alive.store(false, Ordering::Relaxed);
-
         });
 
         Ok(())
@@ -202,7 +211,8 @@ impl MatrixController {
         }
 
         // Tell the thread to stop
-        self.matrix_update_thread_continue.store(false, Ordering::Relaxed);
+        self.matrix_update_thread_continue
+            .store(false, Ordering::Relaxed);
 
         // Wait for the thread to stop
         while self.matrix_update_thread_alive.load(Ordering::Relaxed) {

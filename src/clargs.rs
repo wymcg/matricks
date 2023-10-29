@@ -111,7 +111,6 @@ pub struct MatrixConfigurationArgs {
     pub controller: LEDControllerArgs,
 }
 
-
 /// Options relevant to setting up plugins
 #[derive(Serialize, Deserialize, Args, Clone)]
 pub struct PluginConfigurationArgs {

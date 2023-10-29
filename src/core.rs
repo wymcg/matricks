@@ -117,7 +117,7 @@ pub fn matricks_core(config: MatricksConfigArgs) {
         config.matrix.brightness,
         config.matrix.controller.gpio,
         config.matrix.controller.dma,
-        config.matrix.controller.frequency
+        config.matrix.controller.frequency,
     );
 
     // Start the matrix controleler
@@ -270,16 +270,17 @@ pub fn matricks_core(config: MatricksConfigArgs) {
                             };
 
                             // Pull the next matrix state from the plugin's response
-                            let new_matrix_state = match from_str::<Option<Vec<Vec<[u8; 4]>>>>(json_result_str) {
-                                Ok(matrix_state) => matrix_state,
-                                Err(_) => {
-                                    log::warn!(
+                            let new_matrix_state =
+                                match from_str::<Option<Vec<Vec<[u8; 4]>>>>(json_result_str) {
+                                    Ok(matrix_state) => matrix_state,
+                                    Err(_) => {
+                                        log::warn!(
                                         "Received malformed update from plugin \"{plugin_name}\""
                                     );
-                                    log::warn!("This plugin will be skipped.");
-                                    break 'update_loop;
-                                }
-                            };
+                                        log::warn!("This plugin will be skipped.");
+                                        break 'update_loop;
+                                    }
+                                };
 
                             match new_matrix_state {
                                 None => {
@@ -288,7 +289,8 @@ pub fn matricks_core(config: MatricksConfigArgs) {
                                 }
                                 Some(new_matrix_state) => {
                                     match matrix.update(new_matrix_state) {
-                                        Ok(_) => {/* Do nothing, the new state sent without issue */}
+                                        Ok(_) => { /* Do nothing, the new state sent without issue */
+                                        }
                                         Err(_) => {
                                             log::error!("Failed to update matrix controller.");
                                             break 'main_loop;

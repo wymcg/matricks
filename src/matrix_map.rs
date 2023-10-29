@@ -1,7 +1,7 @@
 /// Maps LEDs in a 2D matrix to a strip of LEDs
 #[derive(Clone)]
 pub(crate) struct MatrixMap {
-    map: Vec<Vec<usize>>
+    map: Vec<Vec<usize>>,
 }
 
 impl MatrixMap {
@@ -98,10 +98,7 @@ impl MatrixMapBuilder {
             }
         }
 
-        MatrixMap {
-            map,
-        }
-
+        MatrixMap { map }
     }
 
     /// Specify that the matrix is serpentine
