@@ -54,6 +54,7 @@ pub struct ConfigurationFileWriteInfo {
     pub config_path: String,
 }
 
+/// Options relevant to setting up a LED controller
 #[derive(Serialize, Deserialize, Args, Clone)]
 pub struct LEDControllerArgs {
     /// GPIO used to drive the matrix
@@ -69,6 +70,7 @@ pub struct LEDControllerArgs {
     pub frequency: u32,
 }
 
+/// Options relevant to setting up a LED matrix
 #[derive(Serialize, Deserialize, Args, Clone)]
 pub struct MatrixConfigurationArgs {
     /// Width of the matrix, in number of LEDs
@@ -100,6 +102,7 @@ pub struct MatrixConfigurationArgs {
 }
 
 
+/// Options relevant to setting up plugins
 #[derive(Serialize, Deserialize, Args, Clone)]
 pub struct PluginConfigurationArgs {
     /// Path to plugin or directory of plugins
@@ -123,6 +126,7 @@ pub struct PluginConfigurationArgs {
     pub map_path: Option<Vec<String>>,
 }
 
+/// Options relevant to setting up Matricks
 #[derive(Args, Clone, Serialize, Deserialize)]
 pub struct MatricksConfigArgs {
     #[command(flatten)]

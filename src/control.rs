@@ -6,22 +6,53 @@ use std::thread;
 use std::time::Duration;
 use crate::matrix_map::MatrixMapBuilder;
 
-
-pub struct MatrixController {
+/// Manages the matrix update thread
+pub(crate) struct MatrixController {
+    /// The dimensions of the matrix, in number of LEDs
     matrix_dimensions: (usize, usize),
-    matrix_state: Arc<Mutex<Vec<Vec<[u8; 4]>>>>,
+
+    /// The current state of all LEDs in the matrix, as a two-dimensional array of BGRA color values
+    matrix_state: Arc<Mutex<MatrixState>>,
+
+    /// True is the matrix is vertically wired
     serpentine: bool,
+
+    /// True if the matrix is vertically wired
     vertical: bool,
+
+    /// The DMA channel to use while controlling the matrix
     dma_channel: u16,
+
+    /// The GPIO pin to use while controlling the matrix
     gpio_pin: u16,
+
+    /// The signal frequency to use while controlling the matrix
     signal_frequency: u32,
+
+    /// The brightness of the matrix
     brightness: u8,
+
+    /// True if the matrix update thread is running
     matrix_update_thread_alive: Arc<AtomicBool>,
+
+    /// True if the matrix update thread should continue running
     matrix_update_thread_continue: Arc<AtomicBool>,
 }
 
 impl MatrixController {
-    pub fn new(
+    /// Create a new matrix controller
+    ///
+    /// # Arguments
+    ///
+    /// * `matrix_dimensions` - The size of the matrix in number of LEDs (width, height)
+    /// * `serpentine` - Whether or not the matrix is serpentine
+    /// * `vertical` - Whether or not the matrix is vertically wired
+    /// * `brighness` - The brightness of the matrix, from 0 to 255
+    /// * `gpio_pin` - The GPIO pin to use to control the matrix
+    /// * `dma_channel` - The DMA channel to use to control the matrix
+    /// * `signal_frequency` - The signal frequency to use to control the matrix
+    ///
+    pub(crate) fn new(
         matrix_dimensions: (usize, usize),
         serpentine: bool,
         vertical: bool,
@@ -47,7 +78,8 @@ impl MatrixController {
         }
     }
 
-    pub fn start(&mut self) -> Result<(), ()> {
+    /// Start the matrix controller
+    pub(crate) fn start(&mut self) -> Result<(), ()> {
         if self.matrix_update_thread_alive.load(Ordering::Relaxed) {
             log::warn!("Matrix update thread already exists, ignoring this start command.");
             return Ok(());
@@ -165,7 +197,8 @@ impl MatrixController {
         Ok(())
     }
 
-    pub fn stop(&mut self) -> Result<(), ()> {
+    /// Stop the matrix update thread
+    pub(crate) fn stop(&mut self) -> Result<(), ()> {
         if !self.matrix_update_thread_alive.load(Ordering::Relaxed) {
             log::warn!("No update thread exists to stop.");
             return Err(());
@@ -182,7 +215,13 @@ impl MatrixController {
         Ok(())
     }
 
-    pub fn update(&mut self, new_state: MatrixState) -> Result<(), ()> {
+    /// Update the state of the matrix
+    ///
+    /// # Arguments
+    ///
+    /// `new_state` - The new state for the matrix
+    ///
+    pub(crate) fn update(&mut self, new_state: MatrixState) -> Result<(), ()> {
         match self.matrix_state.lock() {
             Ok(mut matrix_state) => {
                 *matrix_state = new_state;
@@ -196,7 +235,13 @@ impl MatrixController {
     }
 }
 
-pub fn clear_matrix(led_controller: &mut Controller) -> Result<(), WS2811Error> {
+/// Clear all LEDs in a rs_ws281x LED controller
+///
+/// # Arguments
+///
+/// `led_controller` - The LED controller to clear
+///
+pub(crate) fn clear_matrix(led_controller: &mut Controller) -> Result<(), WS2811Error> {
     let leds = led_controller.leds_mut(0);
     for led in leds {
         *led = [0, 0, 0, 0];
