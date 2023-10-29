@@ -259,20 +259,20 @@ pub fn matricks_core(config: MatricksConfigArgs) {
                                     }
                                 };
 
-                            match new_matrix_state {
+                            let new_matrix_state = match new_matrix_state {
                                 None => {
                                     log::info!("Done with plugin \"{plugin_name}\".");
                                     break 'update_loop;
                                 }
-                                Some(new_matrix_state) => {
-                                    match matrix.update(new_matrix_state) {
-                                        Ok(_) => { /* Do nothing, the new state sent without issue */
-                                        }
-                                        Err(_) => {
-                                            log::error!("Failed to update matrix controller.");
-                                            break 'main_loop;
-                                        }
-                                    }
+                                Some(new_matrix_state) => {new_matrix_state}
+                            };
+
+                            match matrix.update(new_matrix_state) {
+                                Ok(_) => { /* Do nothing, the new state sent without issue */
+                                }
+                                Err(_) => {
+                                    log::error!("Failed to update matrix controller.");
+                                    break 'main_loop;
                                 }
                             }
                         }
