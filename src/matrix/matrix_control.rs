@@ -117,9 +117,6 @@ impl MatrixController {
 
         // Start the matrix update thread
         thread::spawn(move || {
-            // Mark the thread as alive
-            thread_alive.store(true, Ordering::Relaxed);
-
             // Create the LED controller
             let mut controller = match ControllerBuilder::new()
                 .freq(frequency)
@@ -142,6 +139,9 @@ impl MatrixController {
                     return;
                 }
             };
+
+            // Mark the thread as alive
+            thread_alive.store(true, Ordering::Relaxed);
 
             'update: loop {
                 let current_state: MatrixState = match thread_matrix_state.lock() {
@@ -229,6 +229,11 @@ impl MatrixController {
     /// `new_state` - The new state for the matrix
     ///
     pub(crate) fn update(&mut self, new_state: MatrixState) -> Result<(), ()> {
+        // Return an error if the thread is not alive
+        if !self.matrix_update_thread_alive.load(Ordering::Relaxed) {
+            return Err(());
+        }
+
         match self.matrix_state.lock() {
             Ok(mut matrix_state) => {
                 *matrix_state = new_state;
