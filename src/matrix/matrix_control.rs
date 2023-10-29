@@ -1,5 +1,5 @@
-use crate::matrix_map::{MatrixMap, MatrixMapBuilder};
-use crate::matrix_state::MatrixState;
+use crate::matrix::matrix_map::{MatrixMap, MatrixMapBuilder};
+use crate::matrix::matrix_state::MatrixState;
 use rs_ws281x::{ChannelBuilder, Controller, ControllerBuilder, StripType, WS2811Error};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};

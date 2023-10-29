@@ -1,9 +1,8 @@
 mod clargs;
 mod core;
 mod path_map;
-mod plugin_iterator;
-mod plugin_logs;
 mod matrix;
+mod plugin;
 
 use crate::clargs::{MatricksArgs, MatricksSubcommand};
 use crate::core::matricks_core;
