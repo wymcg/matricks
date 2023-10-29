@@ -4,6 +4,8 @@ use serde::{Deserialize, Serialize};
 pub const MATRICKS_DEFAULT_FPS: &str = "30";
 pub const MATRICKS_DEFAULT_SERPENTINE: &str = "false";
 pub const MATRICKS_DEFAULT_VERTICAL: &str = "false";
+pub const MATRICKS_DEFAULT_MIRROR_HORIZONTAL: &str = "false";
+pub const MATRICKS_DEFAULT_MIRROR_VERTICAL: &str = "false";
 pub const MATRICKS_DEFAULT_BRIGHTNESS: &str = "255";
 pub const MATRICKS_DEFAULT_LOOP: &str = "false";
 pub const MATRICKS_DEFAULT_DMA_CHANNEL: &str = "10";
@@ -89,9 +91,17 @@ pub struct MatrixConfigurationArgs {
     #[arg(short, long, default_value = MATRICKS_DEFAULT_SERPENTINE)]
     pub serpentine: bool,
 
-    /// Data line alternates direction between columns or rows
+    /// Matrix is vertically wired
     #[arg(short, long, default_value = MATRICKS_DEFAULT_VERTICAL)]
     pub vertical: bool,
+
+    /// Flip the matrix horizontally
+    #[arg(long, default_value = MATRICKS_DEFAULT_MIRROR_HORIZONTAL)]
+    pub mirror_horizontal: bool,
+
+    /// Flip the matrix vertically
+    #[arg(long, default_value = MATRICKS_DEFAULT_MIRROR_VERTICAL)]
+    pub mirror_vertical: bool,
 
     /// Brightness of matrix, from 0-255
     #[arg(short, long, default_value = MATRICKS_DEFAULT_BRIGHTNESS)]

@@ -4,7 +4,7 @@ use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
 use std::time::Duration;
-use crate::matrix_map::MatrixMapBuilder;
+use crate::matrix_map::{MatrixMap, MatrixMapBuilder};
 
 /// Manages the matrix update thread
 pub(crate) struct MatrixController {
@@ -13,12 +13,6 @@ pub(crate) struct MatrixController {
 
     /// The current state of all LEDs in the matrix, as a two-dimensional array of BGRA color values
     matrix_state: Arc<Mutex<MatrixState>>,
-
-    /// True is the matrix is vertically wired
-    serpentine: bool,
-
-    /// True if the matrix is vertically wired
-    vertical: bool,
 
     /// The DMA channel to use while controlling the matrix
     dma_channel: u16,
@@ -31,6 +25,9 @@ pub(crate) struct MatrixController {
 
     /// The brightness of the matrix
     brightness: u8,
+
+    /// Maps matrix pixels to LEDs on a strip
+    matrix_map: MatrixMap,
 
     /// True if the matrix update thread is running
     matrix_update_thread_alive: Arc<AtomicBool>,
@@ -55,24 +52,33 @@ impl MatrixController {
     pub(crate) fn new(
         matrix_dimensions: (usize, usize),
         serpentine: bool,
+        mirror_horizontal: bool,
+        mirror_vertical: bool,
         vertical: bool,
         brightness: u8,
         gpio_pin: u16,
         dma_channel: u16,
         signal_frequency: u32,
     ) -> Self {
+        // Create the matrix map
+        let mut matrix_map = MatrixMapBuilder::new(matrix_dimensions.0, matrix_dimensions.1);
+        if serpentine {matrix_map = matrix_map.serpentine();}
+        if vertical {matrix_map = matrix_map.vertical();}
+        if mirror_horizontal {matrix_map = matrix_map.mirror_horizontally();}
+        if mirror_vertical {matrix_map = matrix_map.mirror_vertically();}
+        let matrix_map = matrix_map.build();
+
         Self {
             matrix_dimensions,
             matrix_state: Arc::new(Mutex::new(vec![
                 vec![[0; 4]; matrix_dimensions.0];
                 matrix_dimensions.1
             ])),
-            serpentine,
-            vertical,
             dma_channel,
             gpio_pin,
             signal_frequency,
             brightness,
+            matrix_map,
             matrix_update_thread_alive: Arc::new(AtomicBool::new(false)),
             matrix_update_thread_continue: Arc::new(AtomicBool::new(false)),
         }
@@ -98,16 +104,7 @@ impl MatrixController {
         let frequency = self.signal_frequency;
         let dma_channel = self.dma_channel;
         let gpio_pin = self.gpio_pin;
-
-        // Make a matrix map
-        let mut matrix_map_builder = MatrixMapBuilder::new(self.matrix_dimensions.0, self.matrix_dimensions.1);
-        if self.serpentine {
-            matrix_map_builder = matrix_map_builder.serpentine();
-        }
-        if self.vertical {
-            matrix_map_builder = matrix_map_builder.vertical();
-        }
-        let matrix_map = matrix_map_builder.build();
+        let matrix_map = self.matrix_map.clone();
 
         // Start the matrix update thread
         thread::spawn(move || {
