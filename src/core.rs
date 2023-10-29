@@ -1,6 +1,6 @@
 use crate::clargs::MatricksConfigArgs;
-use crate::control::MatrixController;
-use crate::plugin_iterator::{PluginIterator, PluginIteratorError};
+use crate::matrix::matrix_control::MatrixController;
+use crate::plugin::plugin_iterator::{PluginIterator, PluginIteratorError};
 use std::collections::BTreeMap;
 
 use std::ffi::OsStr;
@@ -9,7 +9,7 @@ use std::str::from_utf8;
 use std::time::{Duration, Instant};
 
 use crate::path_map::PathMap;
-use crate::plugin_logs;
+use crate::plugin::plugin_logs;
 use extism::manifest::Wasm;
 use extism::{Function, Manifest, Plugin, ValType};
 use serde_json::from_str;
