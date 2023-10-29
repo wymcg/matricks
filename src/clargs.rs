@@ -114,9 +114,9 @@ pub struct MatrixConfigurationArgs {
 /// Options relevant to setting up plugins
 #[derive(Serialize, Deserialize, Args, Clone)]
 pub struct PluginConfigurationArgs {
-    /// Path to plugin or directory of plugins
-    #[arg(short, long)]
-    pub path: String,
+    /// Path to plugin
+    #[arg(short, long, required = true)]
+    pub plugin: Vec<String>,
 
     /// Maximum time (in seconds) that a single plugin can run before moving on to the next one. No time limit by default.
     #[arg(short, long)]

@@ -4,6 +4,7 @@ use crate::plugin::plugin_iterator::{PluginIterator, PluginIteratorError};
 use std::collections::BTreeMap;
 
 use std::ffi::OsStr;
+use std::fs;
 use std::path::Path;
 use std::str::from_utf8;
 use std::time::{Duration, Instant};
@@ -120,7 +121,7 @@ pub fn matricks_core(config: MatricksConfigArgs) {
         config.matrix.controller.frequency,
     );
 
-    // Start the matrix controleler
+    // Start the matrix controller
     match matrix.start() {
         Ok(_) => {}
         Err(_) => {
@@ -130,48 +131,25 @@ pub fn matricks_core(config: MatricksConfigArgs) {
 
     // The main loop, which is run infinitely if the loop command line flag is set
     'main_loop: loop {
-        // make the plugin iterator
-        let plugin_data_list = match PluginIterator::new(config.plugin.path.clone()) {
-            Ok(plugin_iterator) => plugin_iterator,
-            Err(e) => {
-                log::error!("Failed to instantiate plugin list.");
-                log::debug!("See error: {e:?}");
-                log::info!("Quitting Matricks.");
-                return;
-            }
-        };
-
         ////// PLUGIN LOOP
-        for plugin_result in plugin_data_list {
-            // Check if the plugin data was successfully read
-            let (plugin_path, plugin_data) = match plugin_result {
-                Ok(data) => data,
-                Err(error) => {
-                    match error {
-                        PluginIteratorError::InvalidSeedPath(path) => {
-                            // The seed path is invalid, meaning that no plugins can be read.
-                            // This should never ever happen
-                            log::error!("Could not read plugin data due to an invalid or missing path\"{path}\".");
-                            log::info!("Quitting Matricks.");
-                            return;
-                        }
-                        PluginIteratorError::InvalidPluginPath(path) => {
-                            // Something went wrong with the path to the active plugin
-                            // We can't run this plugin, but we might be able to run others
-                            log::error!("Could not read plugin data due to an invalid or missing path \"{path}\".");
-                            log::warn!("This plugin will be skipped.");
-                        }
-                    }
+        for plugin_path in &config.plugin.plugin {
+            // Get the plugin data at the given path
+            let plugin_data = match fs::read(plugin_path) {
+                Ok(data) => {data}
+                Err(e) => {
+                    log::error!("Failed to read plugin data at path '{plugin_path}'");
+                    log::debug!("Failed with error: {e}");
+                    log::warn!("This plugin will be skipped.");
                     continue;
                 }
             };
 
             // Pull the filename out from the plugin path
-            let plugin_name = Path::new(&plugin_path)
+            let plugin_name = Path::new(plugin_path)
                 .file_name()
-                .unwrap_or(OsStr::new(&plugin_path))
+                .unwrap_or(OsStr::new(plugin_path))
                 .to_str()
-                .unwrap_or(&plugin_path);
+                .unwrap_or(plugin_path);
 
             // Make a new manifest for the plugin
             let mut manifest = Manifest::new([Wasm::data(plugin_data)]);
