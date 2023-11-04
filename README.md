@@ -118,5 +118,5 @@ Add the following lines to `/boot/config.txt`:
 On some distributions, it may be necessary to increase the maximum SPI transfer size by editing `/boot/cmdline.txt` and adding the following line:
 
 ```
-spidev.bufsize=32768
+spidev.bufsiz=32768
 ```
