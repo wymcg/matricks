@@ -12,5 +12,6 @@ If you're looking for some examples of some more complicated plugins, check out 
 | [Perlin Noise](https://github.com/wymcg/perlin_trick)     | Rust     | Shows some pretty colors using Perlin noise               |
 | [Game of Life](https://github.com/wymcg/life_trick)       | Rust     | Runs Conway's Game of Life                                |
 | [r/place](https://github.com/wymcg/place_trick)           | Rust     | Scrolls across [r/place](https://reddit.com/r/place) 2022 |
+| [GIF Player](https://github.com/wymcg/gif_trick)          | Rust     | Scales and plays any GIF                                  |
 
 Want to add your plugin to the list? Make a PR!
